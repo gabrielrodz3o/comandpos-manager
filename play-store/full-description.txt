@@ -1,0 +1,52 @@
+ComandPOS Manager es la app gerencial del sistema ComandPOS, diseñada para que dueños y administradores de restaurantes controlen su negocio en tiempo real desde el móvil.
+
+Conecta con tu cuenta ComandPOS y obtén una visión completa de tu operación, sin importar dónde estés.
+
+▸ DASHBOARD EN TIEMPO REAL
+• Ventas del día actualizadas al minuto
+• Comparativa contra ayer, semana pasada y mes anterior
+• KPIs claros: ticket promedio, facturas, propinas, descuentos
+• Vista consolidada multi-sucursal o por ubicación individual
+
+▸ REPORTES PROFESIONALES
+• Reporte de ventas detallado
+• Ventas por mesero con ranking
+• Reporte de propinas
+• Pérdidas y ganancias (P&G)
+• Compras y proveedores
+• Cierre de cajas
+
+▸ OPERACIÓN DEL NEGOCIO
+• Inventario por almacén con stock en tiempo real
+• Empleados, asistencia y vacaciones
+• Cuentas por cobrar
+• Aprobación de sugerencias de compra automática
+• Aprobación de solicitudes de vacaciones
+
+▸ GESTIÓN
+• Administra meseros, PINs y permisos
+• Vista de mesas por área (libre, ocupada, reservada)
+• Búsqueda de facturas con filtros avanzados y exportación PDF
+• Búsqueda global con atajo rápido
+
+▸ INTELIGENCIA ARTIFICIAL
+• Insights automáticos sobre el desempeño del negocio
+• Asistente IA: pregunta en lenguaje natural sobre tus ventas, empleados o inventario
+• Pronósticos y detección de anomalías
+
+▸ DISEÑO PREMIUM
+• Interfaz moderna, rápida y mobile-first
+• Optimizada para gerentes que se mueven entre sucursales
+• Funciona offline con sincronización automática
+
+▸ SEGURIDAD
+• Acceso exclusivo para usuarios con perfil MASTER del POS
+• Autenticación con JWT y sesiones de larga duración
+• Soporte multi-empresa y multi-sucursal
+
+ComandPOS Manager NO es un POS independiente. Requiere una cuenta activa de ComandPOS (el sistema de punto de venta para restaurantes). Si aún no eres cliente, contáctanos en comandpos.com para activar tu suscripción.
+
+Pensado para República Dominicana y Latinoamérica, con soporte completo para DGII, NCF, ITBIS y cumplimiento fiscal local.
+
+Contacto y soporte: soporte@comandpos.com
+Sitio web: https://comandpos.com

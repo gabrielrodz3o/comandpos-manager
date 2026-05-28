@@ -296,7 +296,7 @@ export default function InvoiceDetailScreen() {
                 <View style={{ gap: 10 }}>
                   {items.map((it, idx) => (
                     <View
-                      key={`item-${it.id ?? idx}`}
+                      key={`item-${it.id ?? 'noid'}-${idx}`}
                       style={{
                         paddingBottom: 10,
                         borderBottomWidth: idx < items.length - 1 ? 0.5 : 0,
