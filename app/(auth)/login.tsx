@@ -20,7 +20,6 @@ import { logger } from '@utils/logger';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const apiBaseUrl = useAuthStore((s) => s.apiBaseUrl);
   const setAuth = useAuthStore((s) => s.setAuth);
   const setActiveBusinessUnit = useBusinessStore((s) => s.setActiveBusinessUnit);
 
@@ -97,11 +96,6 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* DEBUG marker */}
-        <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '700', letterSpacing: 2, marginBottom: 16, textAlign: 'center' }}>
-          PANTALLA LOGIN
-        </Text>
-
         {/* Brand */}
         <View style={{ alignItems: 'center', marginBottom: 28 }}>
           <View
@@ -197,19 +191,6 @@ export default function LoginScreen() {
         >
           <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '700' }}>
             {loading ? 'Iniciando…' : 'Iniciar sesión'}
-          </Text>
-        </Pressable>
-
-        {/* Link servidor */}
-        <Pressable
-          onPress={() => router.replace('/(auth)/server-config')}
-          style={{ alignItems: 'center', paddingVertical: 14, marginTop: 4 }}
-        >
-          <Text style={{ color: palette.dark.textMuted, fontSize: 12, fontWeight: '500' }}>
-            Servidor:{' '}
-            <Text style={{ color: '#10B981', fontWeight: '600' }}>
-              {apiBaseUrl?.replace(/^https?:\/\//, '') ?? 'No configurado'}
-            </Text>
           </Text>
         </Pressable>
       </ScrollView>

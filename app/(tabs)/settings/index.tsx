@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@store/useAuthStore';
@@ -72,7 +72,7 @@ const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { user, apiBaseUrl, logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const businessReset = useBusinessStore((s) => s.reset);
   const bu = useBusinessStore((s) => s.activeBusinessUnit);
 
@@ -89,6 +89,29 @@ export default function SettingsScreen() {
         },
       },
     ]);
+  };
+
+  const handleDeleteAccount = () => {
+    const username = user?.use_username ?? user?.username ?? '';
+    Alert.alert(
+      'Eliminar cuenta',
+      'Tu cuenta y tus datos son administrados por ComandPOS. Para eliminar tu cuenta y los datos asociados, envía una solicitud a soporte@comandpos.com y la procesaremos.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Solicitar eliminación',
+          style: 'destructive',
+          onPress: () =>
+            Linking.openURL(
+              `mailto:soporte@comandpos.com?subject=${encodeURIComponent(
+                'Solicitud de eliminación de cuenta',
+              )}&body=${encodeURIComponent(
+                `Solicito la eliminación de mi cuenta y datos asociados.\n\nUsuario: ${username}`,
+              )}`,
+            ),
+        },
+      ],
+    );
   };
 
   return (
@@ -171,6 +194,11 @@ export default function SettingsScreen() {
             <Row
               label="Cambiar sucursal"
               onPress={() => router.push('/(auth)/select-location')}
+            />
+            <Row
+              label="Eliminar cuenta"
+              onPress={handleDeleteAccount}
+              destructive
               isLast
             />
           </View>
@@ -183,11 +211,6 @@ export default function SettingsScreen() {
             <Row
               label="Notificaciones"
               onPress={() => router.push('/(auth)/notifications-settings')}
-            />
-            <Row
-              label="Servidor"
-              value={apiBaseUrl?.replace(/^https?:\/\//, '') ?? '—'}
-              onPress={() => router.push('/(auth)/server-config')}
             />
             <Row label="Acerca de" onPress={() => router.push('/(auth)/about')} isLast />
           </View>

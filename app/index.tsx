@@ -65,7 +65,6 @@ export default function Index() {
     bus: user?.business_units_with_access?.length ?? 0,
   });
 
-  if (!apiBaseUrl) return <Redirect href="/(auth)/server-config" />;
   if (!token) return <Redirect href="/(auth)/login" />;
 
   // Logueado pero sin empresa seleccionada

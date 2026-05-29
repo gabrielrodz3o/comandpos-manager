@@ -3,6 +3,8 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AuthUser } from '@/types/business';
 
+export const DEFAULT_API_BASE_URL = 'https://restaurante.comandpos.com';
+
 interface AuthState {
   apiBaseUrl: string | null;
   token: string | null;
@@ -18,7 +20,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      apiBaseUrl: null,
+      apiBaseUrl: DEFAULT_API_BASE_URL,
       token: null,
       user: null,
       hydrated: false,
@@ -37,6 +39,9 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
       }),
       onRehydrateStorage: () => (state) => {
+        if (state && !state.apiBaseUrl) {
+          state.setApiBaseUrl(DEFAULT_API_BASE_URL);
+        }
         state?.setHydrated();
       },
     },
