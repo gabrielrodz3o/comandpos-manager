@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@store/useAuthStore';
 import { useBusinessStore } from '@store/useBusinessStore';
-import { Card } from '@components/ui';
+import { Card, IconUsers, IconTable, IconInvoice, IconLogout } from '@components/ui';
 import { palette, shadow } from '@theme/colors';
 import { buName } from '@utils/format';
 
@@ -14,10 +14,10 @@ interface RowProps {
   onPress?: () => void;
   isLast?: boolean;
   destructive?: boolean;
-  emoji?: string;
+  icon?: React.ReactNode;
 }
 
-const Row: React.FC<RowProps> = ({ label, value, onPress, isLast, destructive, emoji }) => (
+const Row: React.FC<RowProps> = ({ label, value, onPress, isLast, destructive, icon }) => (
   <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed && onPress ? 0.6 : 1 })}>
     <View
       style={{
@@ -27,10 +27,10 @@ const Row: React.FC<RowProps> = ({ label, value, onPress, isLast, destructive, e
         paddingVertical: 14,
         borderBottomWidth: isLast ? 0 : 1,
         borderBottomColor: palette.dark.border,
-        gap: 10,
+        gap: 12,
       }}
     >
-      {emoji ? <Text style={{ fontSize: 16 }}>{emoji}</Text> : null}
+      {icon ? <View style={{ width: 22, alignItems: 'center' }}>{icon}</View> : null}
       <Text
         style={{
           color: destructive ? palette.dark.danger : palette.dark.textDim,
@@ -148,7 +148,7 @@ export default function SettingsScreen() {
               justifyContent: 'center',
             }}
           >
-            <Text style={{ fontSize: 20 }}>🚪</Text>
+            <IconLogout color={palette.dark.danger} size={20} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ color: palette.dark.danger, fontSize: 15, fontWeight: '700', letterSpacing: -0.3 }}>
@@ -166,17 +166,17 @@ export default function SettingsScreen() {
         <Card variant="default" padded={false}>
           <View style={{ paddingHorizontal: 18 }}>
             <Row
-              emoji="🧑‍🍳"
+              icon={<IconUsers color={palette.dark.textDim} size={19} />}
               label="Meseros"
               onPress={() => router.push('/(tabs)/settings/waiters')}
             />
             <Row
-              emoji="🪑"
+              icon={<IconTable color={palette.dark.textDim} size={19} />}
               label="Mesas y áreas"
               onPress={() => router.push('/(tabs)/settings/tables')}
             />
             <Row
-              emoji="🧾"
+              icon={<IconInvoice color={palette.dark.textDim} size={19} />}
               label="Facturas"
               onPress={() => router.push('/(tabs)/settings/invoices')}
               isLast

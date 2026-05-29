@@ -23,7 +23,7 @@ import { InsightsPanel } from '@components/dashboard/InsightsPanel';
 import { MonthlyBarChart } from '@components/charts/MonthlyBarChart';
 import { ExpenseDonut } from '@components/charts/ExpenseDonut';
 import { CashFlowLine } from '@components/charts/CashFlowLine';
-import { Card, LoadingState, InlineFetchingBar } from '@components/ui';
+import { Card, LoadingState, InlineFetchingBar, IconMoney, IconTrend, IconBox, IconInvoice, IconLayers } from '@components/ui';
 import { palette } from '@theme/colors';
 import { fmtCurrency, fmtInt, fmtPct, buName } from '@utils/format';
 import { rangeSpanDays } from '@utils/dates';
@@ -142,13 +142,13 @@ export default function DashboardScreen() {
               <KpiCard
                 label="Ventas"
                 value={fmtCurrency(summary.ventas_total)}
-                emoji="💰"
+                icon={<IconMoney color={palette.dark.primary} size={16} />}
                 hint={`${fmtInt(summary.ventas_count)} facturas`}
               />
               <KpiCard
                 label="Utilidad Bruta"
                 value={fmtCurrency(summary.utilidad_bruta)}
-                emoji="📈"
+                icon={<IconTrend color={palette.dark.primary} size={16} />}
                 hint={`${fmtPct(summary.margen_bruto_pct)} margen`}
               />
             </View>
@@ -156,13 +156,13 @@ export default function DashboardScreen() {
               <KpiCard
                 label="Compras"
                 value={fmtCurrency(summary.compras_total)}
-                emoji="🛍️"
+                icon={<IconBox color={palette.dark.primary} size={16} />}
                 hint={`${fmtInt(summary.compras_count)} órdenes`}
               />
               <KpiCard
                 label="Gastos"
                 value={fmtCurrency(summary.gastos_total)}
-                emoji="🧾"
+                icon={<IconInvoice color={palette.dark.primary} size={16} />}
                 hint={`${fmtInt(summary.gastos_count)} registros`}
               />
             </View>
@@ -170,13 +170,13 @@ export default function DashboardScreen() {
               <KpiCard
                 label="ITBIS Neto"
                 value={fmtCurrency(summary.itbis_neto)}
-                emoji="📑"
+                icon={<IconInvoice color={palette.dark.primary} size={16} />}
                 hint={`Cobr ${fmtCurrency(summary.itbis_cobrado)}`}
               />
               <KpiCard
                 label="CxC / CxP"
                 value={`${fmtCurrency(summary.cxc_total)} / ${fmtCurrency(summary.cxp_total)}`.substring(0, 22)}
-                emoji="🔄"
+                icon={<IconLayers color={palette.dark.primary} size={16} />}
                 hint={`DSO ${Math.round(summary.dso || 0)}d · DPO ${Math.round(summary.dpo || 0)}d`}
               />
             </View>

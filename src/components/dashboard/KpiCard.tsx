@@ -6,7 +6,9 @@ import { palette, shadow } from '@theme/colors';
 interface KpiCardProps {
   label: string;
   value: string;
+  /** @deprecated usa `icon` (SVG). Se ignora. */
   emoji?: string;
+  icon?: React.ReactNode;
   delta?: number;
   hint?: string;
   accent?: string;
@@ -16,7 +18,7 @@ interface KpiCardProps {
 export const KpiCard: React.FC<KpiCardProps> = ({
   label,
   value,
-  emoji,
+  icon,
   delta,
   hint,
   accent,
@@ -54,7 +56,20 @@ export const KpiCard: React.FC<KpiCardProps> = ({
           >
             {label}
           </Text>
-          {emoji ? <Text style={{ fontSize: 20 }}>{emoji}</Text> : null}
+          {icon ? (
+            <View
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                backgroundColor: 'rgba(255,255,255,0.14)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {icon}
+            </View>
+          ) : null}
         </View>
 
         <Text
@@ -128,7 +143,20 @@ export const KpiCard: React.FC<KpiCardProps> = ({
         >
           {label}
         </Text>
-        {emoji ? <Text style={{ fontSize: 16 }}>{emoji}</Text> : null}
+        {icon ? (
+          <View
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 9,
+              backgroundColor: c.primaryDim,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {icon}
+          </View>
+        ) : null}
       </View>
 
       <Text

@@ -6,3 +6,4 @@ export * from './LoadingState';
 export * from './SearchButton';
 export * from './Onboarding';
 export * from './FancySkeleton';
+export * from './icons';

@@ -4,8 +4,9 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { KpiCard } from '@components/dashboard/KpiCard';
-import { Card, LoadingState, InlineFetchingBar, SearchButton } from '@components/ui';
+import { Card, LoadingState, InlineFetchingBar, SearchButton, IconSunrise } from '@components/ui';
 import { palette, shadow } from '@theme/colors';
 import { fmtCurrency, fmtInt, fmtPct, buName } from '@utils/format';
 import { useTodaySnapshot } from '@hooks/useTodaySnapshot';
@@ -102,6 +103,7 @@ export default function TodayScreen() {
         ) : (
           <View style={{ paddingHorizontal: 16, gap: 14 }}>
             {/* Hero */}
+            <Animated.View entering={FadeInDown.duration(450).springify().damping(16)}>
             <LinearGradient
               colors={['#0A0A0B', '#1F1F23']}
               start={{ x: 0, y: 0 }}
@@ -187,11 +189,25 @@ export default function TodayScreen() {
                 <HeroMini label="UTILIDAD" value={fmtCurrency(summary?.total_profit ?? 0)} />
               </View>
             </LinearGradient>
+            </Animated.View>
 
             {/* Empty state cuando no hay ventas hoy */}
             {hasNoSales ? (
               <Card variant="default">
-                <Text style={{ fontSize: 36, textAlign: 'center', marginBottom: 8 }}>🌅</Text>
+                <View style={{ alignItems: 'center', marginBottom: 10 }}>
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 18,
+                      backgroundColor: palette.dark.primaryDim,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <IconSunrise color={palette.dark.primary} size={28} />
+                  </View>
+                </View>
                 <Text
                   style={{
                     color: palette.dark.text,
@@ -222,7 +238,7 @@ export default function TodayScreen() {
                 <KpiCard
                   label="Utilidad Bruta"
                   value={fmtCurrency(summary?.total_profit ?? 0)}
-                  emoji="📈"
+                  icon={<IconTrend color={palette.dark.primary} size={17} />}
                   hint={
                     summary?.total_sales
                       ? `${fmtPct(((summary.total_profit ?? 0) / summary.total_sales) * 100)} margen`
@@ -232,7 +248,7 @@ export default function TodayScreen() {
                 <KpiCard
                   label="Costo"
                   value={fmtCurrency(summary?.total_cost ?? 0)}
-                  emoji="📦"
+                  icon={<IconBox color={palette.dark.primary} size={17} />}
                   hint={
                     summary?.total_sales
                       ? `${fmtPct(((summary.total_cost ?? 0) / summary.total_sales) * 100)} de ventas`
@@ -328,11 +344,14 @@ export default function TodayScreen() {
             ) : null}
 
             {/* Quick actions */}
-            <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Animated.View
+              entering={FadeInDown.delay(120).duration(450)}
+              style={{ flexDirection: 'row', gap: 10 }}
+            >
               <QuickAction icon={<IconGrid color={palette.dark.primary} />} label="Dashboard" onPress={() => router.push('/(tabs)/dashboard')} />
               <QuickAction icon={<IconTrend color={palette.dark.primary} />} label="Reportes" onPress={() => router.push('/(tabs)/reports')} />
               <QuickAction icon={<IconBox color={palette.dark.primary} />} label="Operación" onPress={() => router.push('/(tabs)/operations')} />
-            </View>
+            </Animated.View>
           </View>
         )}
       </ScrollView>
