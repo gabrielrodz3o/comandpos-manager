@@ -6,17 +6,78 @@ import {
   TextInput,
   ScrollView,
   Keyboard,
+  Image,
+  StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
 import { AxiosError } from 'axios';
 import { useAuthStore } from '@store/useAuthStore';
 import { useBusinessStore } from '@store/useBusinessStore';
 import { login } from '@services/auth';
 import { normalizeError } from '@services/apiClient';
 import { userCanAccessManager, filterActiveLocations } from '@/types/business';
-import { palette } from '@theme/colors';
+import { palette, shadow } from '@theme/colors';
 import { logger } from '@utils/logger';
+
+const BRAND_DEEP = '#075E47';
+const BRAND_MID = '#0E8A63';
+const BRAND = '#10B981';
+
+type IconProps = { color: string; size?: number };
+
+const IconUser = ({ color, size = 20 }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
+      stroke={color}
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+const IconLock = ({ color, size = 20 }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M5 11h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Zm2 0V7a5 5 0 0 1 10 0v4"
+      stroke={color}
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+const IconEye = ({ color, size = 20 }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"
+      stroke={color}
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke={color} strokeWidth={1.8} />
+  </Svg>
+);
+
+const IconEyeOff = ({ color, size = 20 }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.4 5.2A9.5 9.5 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.8M6.1 6.1A17 17 0 0 0 2 12s3.5 7 10 7a9.3 9.3 0 0 0 2.6-.4"
+      stroke={color}
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -27,6 +88,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [focused, setFocused] = useState<null | 'user' | 'pass'>(null);
 
   const handleLogin = async () => {
     setError('');
@@ -43,7 +106,6 @@ export default function LoginScreen() {
         rememberMe: true,
       });
 
-      // Validar acceso: status + profile
       const validation = userCanAccessManager(user);
       logger.info('[login]', 'access validation', {
         use_sta_id: user.use_sta_id,
@@ -89,111 +151,262 @@ export default function LoginScreen() {
     }
   };
 
+  const c = palette.dark;
+  const userBorder = focused === 'user' ? BRAND : c.border;
+  const passBorder = error ? c.danger : focused === 'pass' ? BRAND : c.border;
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }} edges={['top']}>
+    <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <StatusBar barStyle="light-content" />
       <ScrollView
-        contentContainerStyle={{ padding: 24, paddingBottom: 60 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 48 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        bounces={false}
       >
-        {/* Brand */}
-        <View style={{ alignItems: 'center', marginBottom: 28 }}>
+        {/* ───────── HERO ───────── */}
+        <LinearGradient
+          colors={[BRAND_DEEP, BRAND_MID, BRAND]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            borderBottomLeftRadius: 36,
+            borderBottomRightRadius: 36,
+            overflow: 'hidden',
+          }}
+        >
+          {/* anillos decorativos */}
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              top: -90,
+              right: -70,
+              width: 240,
+              height: 240,
+              borderRadius: 120,
+              borderWidth: 1.5,
+              borderColor: 'rgba(255,255,255,0.14)',
+            }}
+          />
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              top: -40,
+              right: -20,
+              width: 150,
+              height: 150,
+              borderRadius: 75,
+              borderWidth: 1.5,
+              borderColor: 'rgba(255,255,255,0.10)',
+            }}
+          />
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              bottom: -60,
+              left: -50,
+              width: 180,
+              height: 180,
+              borderRadius: 90,
+              backgroundColor: 'rgba(255,255,255,0.06)',
+            }}
+          />
+
+          <SafeAreaView edges={['top']}>
+            <View style={{ alignItems: 'center', paddingTop: 28, paddingBottom: 44, paddingHorizontal: 24 }}>
+              {/* Icono real de la app */}
+              <Animated.View
+                entering={FadeInDown.delay(80).duration(600).springify().damping(14)}
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: 26,
+                  backgroundColor: '#FFFFFF',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  ...shadow.hero,
+                  shadowOpacity: 0.35,
+                }}
+              >
+                <Image
+                  source={require('../../assets/icon.png')}
+                  style={{ width: 80, height: 80, borderRadius: 20 }}
+                  resizeMode="cover"
+                />
+              </Animated.View>
+
+              <Animated.Text
+                entering={FadeInDown.delay(180).duration(500)}
+                style={{
+                  color: '#FFFFFF',
+                  fontSize: 26,
+                  fontWeight: '800',
+                  letterSpacing: -0.6,
+                  marginTop: 18,
+                }}
+              >
+                ComandPOS
+              </Animated.Text>
+
+              <Animated.View
+                entering={FadeIn.delay(280).duration(500)}
+                style={{
+                  marginTop: 6,
+                  paddingHorizontal: 12,
+                  paddingVertical: 4,
+                  borderRadius: 999,
+                  backgroundColor: 'rgba(255,255,255,0.16)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(255,255,255,0.22)',
+                }}
+              >
+                <Text style={{ color: '#EAFDF5', fontSize: 12, fontWeight: '700', letterSpacing: 2 }}>
+                  MANAGER
+                </Text>
+              </Animated.View>
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
+
+        {/* ───────── FORM ───────── */}
+        <Animated.View
+          entering={FadeInDown.delay(320).duration(600).springify().damping(16)}
+          style={{ paddingHorizontal: 24, marginTop: 28 }}
+        >
+          <Text style={{ color: c.text, fontSize: 22, fontWeight: '800', letterSpacing: -0.5 }}>
+            Bienvenido de nuevo
+          </Text>
+          <Text style={{ color: c.textDim, fontSize: 14, marginTop: 4, marginBottom: 26 }}>
+            Ingresa para ver tus reportes y ventas
+          </Text>
+
+          {/* Usuario */}
+          <Text style={{ color: c.text, fontSize: 13, fontWeight: '700', marginBottom: 8 }}>
+            Email o usuario
+          </Text>
           <View
             style={{
-              width: 60,
-              height: 60,
-              borderRadius: 18,
-              backgroundColor: '#0A0A0B',
+              flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 12,
+              height: 54,
+              borderWidth: 1.5,
+              borderColor: userBorder,
+              borderRadius: 15,
+              paddingHorizontal: 14,
+              backgroundColor: focused === 'user' ? c.primaryDim : '#FFFFFF',
+              marginBottom: 18,
             }}
           >
-            <Text style={{ fontSize: 26 }}>📊</Text>
+            <IconUser color={focused === 'user' ? BRAND : c.textMuted} />
+            <TextInput
+              value={username}
+              onChangeText={setUsername}
+              onFocus={() => setFocused('user')}
+              onBlur={() => setFocused(null)}
+              placeholder="admin@empresa.com"
+              placeholderTextColor={c.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              style={{ flex: 1, marginLeft: 12, fontSize: 15, fontWeight: '500', color: c.text }}
+            />
           </View>
-          <Text style={{ color: palette.dark.text, fontSize: 22, fontWeight: '700' }}>
-            Bienvenido
-          </Text>
-          <Text style={{ color: palette.dark.textDim, fontSize: 13, marginTop: 4 }}>
-            Ingresa para ver tus reportes
-          </Text>
-        </View>
 
-        {/* Email */}
-        <Text style={{ color: palette.dark.text, fontSize: 13, fontWeight: '600', marginBottom: 6 }}>
-          Email o usuario
-        </Text>
-        <TextInput
-          value={username}
-          onChangeText={setUsername}
-          placeholder="admin@empresa.com"
-          placeholderTextColor={palette.dark.textMuted}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          style={{
-            height: 52,
-            borderWidth: 1,
-            borderColor: palette.dark.border,
-            borderRadius: 14,
-            paddingHorizontal: 16,
-            fontSize: 15,
-            color: palette.dark.text,
-            backgroundColor: '#FFFFFF',
-            marginBottom: 16,
-          }}
-        />
-
-        {/* Password */}
-        <Text style={{ color: palette.dark.text, fontSize: 13, fontWeight: '600', marginBottom: 6 }}>
-          Contraseña
-        </Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="••••••••"
-          placeholderTextColor={palette.dark.textMuted}
-          secureTextEntry
-          autoCapitalize="none"
-          style={{
-            height: 52,
-            borderWidth: 1,
-            borderColor: error ? palette.dark.danger : palette.dark.border,
-            borderRadius: 14,
-            paddingHorizontal: 16,
-            fontSize: 15,
-            color: palette.dark.text,
-            backgroundColor: '#FFFFFF',
-            marginBottom: 8,
-          }}
-        />
-
-        {/* Error */}
-        {error ? (
-          <Text style={{ color: palette.dark.danger, fontSize: 12, fontWeight: '600', marginBottom: 8 }}>
-            {error}
+          {/* Contraseña */}
+          <Text style={{ color: c.text, fontSize: 13, fontWeight: '700', marginBottom: 8 }}>
+            Contraseña
           </Text>
-        ) : null}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              height: 54,
+              borderWidth: 1.5,
+              borderColor: passBorder,
+              borderRadius: 15,
+              paddingHorizontal: 14,
+              backgroundColor: focused === 'pass' ? c.primaryDim : '#FFFFFF',
+              marginBottom: 10,
+            }}
+          >
+            <IconLock color={focused === 'pass' ? BRAND : c.textMuted} />
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              onFocus={() => setFocused('pass')}
+              onBlur={() => setFocused(null)}
+              placeholder="••••••••"
+              placeholderTextColor={c.textMuted}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              style={{ flex: 1, marginLeft: 12, fontSize: 15, fontWeight: '500', color: c.text }}
+            />
+            <Pressable
+              onPress={() => setShowPassword((s) => !s)}
+              hitSlop={10}
+              style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, padding: 2 })}
+            >
+              {showPassword ? (
+                <IconEyeOff color={c.textMuted} />
+              ) : (
+                <IconEye color={c.textMuted} />
+              )}
+            </Pressable>
+          </View>
 
-        {/* BOTÓN INICIAR SESIÓN — verde grande, imposible de no ver */}
-        <Pressable
-          onPress={handleLogin}
-          disabled={loading}
-          style={({ pressed }) => ({
-            backgroundColor: '#10B981',
-            height: 56,
-            borderRadius: 16,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginTop: 16,
-            opacity: loading ? 0.6 : pressed ? 0.85 : 1,
-          })}
-        >
-          <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '700' }}>
-            {loading ? 'Iniciando…' : 'Iniciar sesión'}
+          {/* Error */}
+          {error ? (
+            <Animated.Text
+              entering={FadeIn.duration(200)}
+              style={{ color: c.danger, fontSize: 13, fontWeight: '600', marginBottom: 6 }}
+            >
+              {error}
+            </Animated.Text>
+          ) : null}
+
+          {/* Botón */}
+          <Pressable
+            onPress={handleLogin}
+            disabled={loading}
+            style={({ pressed }) => ({
+              height: 56,
+              borderRadius: 16,
+              marginTop: 18,
+              overflow: 'hidden',
+              opacity: loading ? 0.7 : pressed ? 0.92 : 1,
+              ...shadow.hero,
+            })}
+          >
+            <LinearGradient
+              colors={[BRAND, BRAND_MID]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ flex: 1, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 10 }}
+            >
+              {loading ? <ActivityIndicator color="#FFFFFF" /> : null}
+              <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '800', letterSpacing: -0.2 }}>
+                {loading ? 'Iniciando…' : 'Iniciar sesión'}
+              </Text>
+            </LinearGradient>
+          </Pressable>
+
+          {/* Footer */}
+          <Text
+            style={{
+              color: c.textMuted,
+              fontSize: 12,
+              textAlign: 'center',
+              marginTop: 24,
+              lineHeight: 18,
+            }}
+          >
+            Acceso exclusivo para usuarios autorizados{'\n'}del sistema de punto de venta ComandPOS
           </Text>
-        </Pressable>
+        </Animated.View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

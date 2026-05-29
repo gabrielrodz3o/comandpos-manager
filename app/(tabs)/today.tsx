@@ -3,6 +3,7 @@ import { View, Text, ScrollView, RefreshControl, Pressable } from 'react-native'
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path } from 'react-native-svg';
 import { KpiCard } from '@components/dashboard/KpiCard';
 import { Card, LoadingState, InlineFetchingBar, SearchButton } from '@components/ui';
 import { palette, shadow } from '@theme/colors';
@@ -328,9 +329,9 @@ export default function TodayScreen() {
 
             {/* Quick actions */}
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <QuickAction emoji="📊" label="Dashboard" onPress={() => router.push('/(tabs)/dashboard')} />
-              <QuickAction emoji="📈" label="Reportes" onPress={() => router.push('/(tabs)/reports')} />
-              <QuickAction emoji="📦" label="Operación" onPress={() => router.push('/(tabs)/operations')} />
+              <QuickAction icon={<IconGrid color={palette.dark.primary} />} label="Dashboard" onPress={() => router.push('/(tabs)/dashboard')} />
+              <QuickAction icon={<IconTrend color={palette.dark.primary} />} label="Reportes" onPress={() => router.push('/(tabs)/reports')} />
+              <QuickAction icon={<IconBox color={palette.dark.primary} />} label="Operación" onPress={() => router.push('/(tabs)/operations')} />
             </View>
           </View>
         )}
@@ -350,8 +351,8 @@ const HeroMini: React.FC<{ label: string; value: string }> = ({ label, value }) 
   </View>
 );
 
-const QuickAction: React.FC<{ emoji: string; label: string; onPress: () => void }> = ({
-  emoji,
+const QuickAction: React.FC<{ icon: React.ReactNode; label: string; onPress: () => void }> = ({
+  icon,
   label,
   onPress,
 }) => (
@@ -365,12 +366,61 @@ const QuickAction: React.FC<{ emoji: string; label: string; onPress: () => void 
       borderColor: palette.dark.border,
       paddingVertical: 16,
       alignItems: 'center',
-      gap: 6,
+      gap: 8,
       opacity: pressed ? 0.7 : 1,
       ...shadow.sm,
     })}
   >
-    <Text style={{ fontSize: 24 }}>{emoji}</Text>
+    <View
+      style={{
+        width: 38,
+        height: 38,
+        borderRadius: 12,
+        backgroundColor: palette.dark.primaryDim,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {icon}
+    </View>
     <Text style={{ color: palette.dark.text, fontSize: 12, fontWeight: '700' }}>{label}</Text>
   </Pressable>
+);
+
+type IconProps = { color: string; size?: number };
+
+const IconGrid = ({ color, size = 20 }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z"
+      stroke={color}
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+const IconTrend = ({ color, size = 20 }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="m3 17 6-6 4 4 8-8M21 7v6m0-6h-6"
+      stroke={color}
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+const IconBox = ({ color, size = 20 }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M21 8 12 3 3 8m18 0-9 5m9-5v8l-9 5m0-8L3 8m9 5v8M3 8v8l9 5"
+      stroke={color}
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
 );
