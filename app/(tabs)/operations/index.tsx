@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Card } from '@components/ui';
+import { Card, IconCalendar, IconCart, IconBox, IconUsers, IconCard, IconMoon, IconBot } from '@components/ui';
 import { palette } from '@theme/colors';
 import { fmtInt } from '@utils/format';
 import { useInventory, useEmployees } from '@hooks/useOperations';
@@ -13,7 +13,7 @@ interface OpItem {
   href: Href;
   title: string;
   description: string;
-  emoji: string;
+  icon: React.ReactNode;
   tint: string;
   badge?: { label: string; color: string; bg: string };
 }
@@ -42,7 +42,7 @@ export default function OperationsIndex() {
       href: '/(tabs)/operations/vacations',
       title: 'Vacaciones',
       description: 'Solicitudes de empleados',
-      emoji: '🌴',
+      icon: <IconCalendar color="#10B981" size={22} />,
       tint: '#ECFDF5',
       badge:
         pendingVacations > 0
@@ -54,7 +54,7 @@ export default function OperationsIndex() {
       href: '/(tabs)/operations/requisitions',
       title: 'Sugerencias de Compra',
       description: 'Recomendaciones automáticas del sistema',
-      emoji: '🛒',
+      icon: <IconCart color="#EA580C" size={22} />,
       tint: '#FFF7ED',
       badge:
         pendingReqs > 0
@@ -69,7 +69,7 @@ export default function OperationsIndex() {
       href: '/(tabs)/operations/inventory',
       title: 'Inventario',
       description: 'Stock por almacén con alertas',
-      emoji: '📦',
+      icon: <IconBox color="#D97706" size={22} />,
       tint: '#FFFBEB',
       badge:
         lowStockCount > 0
@@ -81,7 +81,7 @@ export default function OperationsIndex() {
       href: '/(tabs)/operations/employees',
       title: 'Empleados',
       description: 'Lista de empleados activos',
-      emoji: '👥',
+      icon: <IconUsers color="#2563EB" size={22} />,
       tint: '#EFF6FF',
       badge:
         totalEmps > 0
@@ -93,7 +93,7 @@ export default function OperationsIndex() {
       href: '/(tabs)/operations/receivables',
       title: 'Cuentas por Cobrar',
       description: 'Clientes con saldo pendiente',
-      emoji: '💳',
+      icon: <IconCard color="#DB2777" size={22} />,
       tint: '#FDF2F8',
     },
     {
@@ -101,7 +101,7 @@ export default function OperationsIndex() {
       href: '/(tabs)/operations/shifts',
       title: 'Calendario de turnos',
       description: 'Vista semanal del equipo',
-      emoji: '📅',
+      icon: <IconCalendar color="#2563EB" size={22} />,
       tint: '#EFF6FF',
     },
     {
@@ -109,7 +109,7 @@ export default function OperationsIndex() {
       href: '/(tabs)/operations/day-closure',
       title: 'Cierre del día',
       description: 'Wizard guiado de cierre operativo',
-      emoji: '🌙',
+      icon: <IconMoon color="#0284C7" size={22} />,
       tint: '#F0F9FF',
     },
     {
@@ -117,7 +117,7 @@ export default function OperationsIndex() {
       href: '/(tabs)/operations/ai-assistant',
       title: 'Asistente IA',
       description: 'Pregunta en lenguaje natural sobre tu negocio',
-      emoji: '🤖',
+      icon: <IconBot color="#7C3AED" size={22} />,
       tint: '#F5F3FF',
       badge: { label: 'BETA', color: '#5B21B6', bg: '#EDE9FE' },
     },
@@ -260,7 +260,7 @@ const OpCard: React.FC<{ item: OpItem; onPress: () => void }> = ({ item: r, onPr
             justifyContent: 'center',
           }}
         >
-          <Text style={{ fontSize: 22 }}>{r.emoji}</Text>
+          {r.icon}
         </View>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

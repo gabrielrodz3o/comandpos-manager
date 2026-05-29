@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Card } from '@components/ui';
+import { Card, IconCart, IconUsers, IconMoney, IconTrend, IconInvoice } from '@components/ui';
 import { palette } from '@theme/colors';
 
 interface ReportItem {
@@ -10,18 +10,18 @@ interface ReportItem {
   href: Href | null;
   title: string;
   description: string;
-  emoji: string;
+  icon: React.ReactNode;
   tint: string;
   comingSoon?: boolean;
 }
 
 const REPORTS: ReportItem[] = [
-  { key: 'sales',              href: '/(tabs)/reports/sales',          title: 'Ventas',           description: 'Resumen, productos, pagos y caja', emoji: '🛒', tint: '#ECFDF5' },
-  { key: 'waiter-sales',       href: '/(tabs)/reports/waiter-sales',   title: 'Por Mesero',       description: 'Performance del equipo de salón',  emoji: '🧑‍🍳', tint: '#EFF6FF' },
-  { key: 'tips-analysis',      href: '/(tabs)/reports/tips-analysis',  title: 'Propinas',         description: 'Análisis y distribución',          emoji: '💵', tint: '#FFFBEB' },
-  { key: 'profit-loss',        href: '/(tabs)/reports/profit-loss',        title: 'Estado de Resultados', description: 'P&L del período',                  emoji: '📊', tint: '#F5F3FF' },
-  { key: 'purchases-expenses', href: '/(tabs)/reports/purchases-expenses', title: 'Compras y Gastos',     description: 'Proveedores y categorías',         emoji: '🧾', tint: '#FDF2F8' },
-  { key: 'boxes',              href: '/(tabs)/reports/boxes',              title: 'Cajas',                description: 'Aperturas, cierres y diferencias', emoji: '💰', tint: '#F0FDFA' },
+  { key: 'sales',              href: '/(tabs)/reports/sales',          title: 'Ventas',           description: 'Resumen, productos, pagos y caja', icon: <IconCart color="#10B981" size={22} />, tint: '#ECFDF5' },
+  { key: 'waiter-sales',       href: '/(tabs)/reports/waiter-sales',   title: 'Por Mesero',       description: 'Performance del equipo de salón',  icon: <IconUsers color="#2563EB" size={22} />, tint: '#EFF6FF' },
+  { key: 'tips-analysis',      href: '/(tabs)/reports/tips-analysis',  title: 'Propinas',         description: 'Análisis y distribución',          icon: <IconMoney color="#D97706" size={22} />, tint: '#FFFBEB' },
+  { key: 'profit-loss',        href: '/(tabs)/reports/profit-loss',        title: 'Estado de Resultados', description: 'P&L del período',                  icon: <IconTrend color="#7C3AED" size={22} />, tint: '#F5F3FF' },
+  { key: 'purchases-expenses', href: '/(tabs)/reports/purchases-expenses', title: 'Compras y Gastos',     description: 'Proveedores y categorías',         icon: <IconInvoice color="#DB2777" size={22} />, tint: '#FDF2F8' },
+  { key: 'boxes',              href: '/(tabs)/reports/boxes',              title: 'Cajas',                description: 'Aperturas, cierres y diferencias', icon: <IconMoney color="#0D9488" size={22} />, tint: '#F0FDFA' },
 ];
 
 export default function ReportsIndex() {
@@ -58,7 +58,7 @@ export default function ReportsIndex() {
                       justifyContent: 'center',
                     }}
                   >
-                    <Text style={{ fontSize: 22 }}>{r.emoji}</Text>
+                    {r.icon}
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

@@ -168,3 +168,110 @@ export const IconStore = (p: IconProps) => {
     </Svg>
   );
 };
+
+/** Carrito — compras / ventas */
+export const IconCart = (p: IconProps) => {
+  const { color, size, sw } = base(p);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={9} cy={20} r={1.4} stroke={color} strokeWidth={sw} />
+      <Circle cx={18} cy={20} r={1.4} stroke={color} strokeWidth={sw} />
+      <Path d="M2 3h2.2l2.1 12.3a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.2L21 7H5" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+};
+
+/** Calendario — turnos / vacaciones / aging */
+export const IconCalendar = (p: IconProps) => {
+  const { color, size, sw } = base(p);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x={3} y={4} width={18} height={18} rx={2} stroke={color} strokeWidth={sw} />
+      <Path d="M3 9h18M8 2v4m8-4v4" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+};
+
+/** Tarjeta — cuentas por cobrar */
+export const IconCard = (p: IconProps) => {
+  const { color, size, sw } = base(p);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x={2} y={5} width={20} height={14} rx={2} stroke={color} strokeWidth={sw} />
+      <Path d="M2 10h20M6 15h4" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+};
+
+/** Luna — cierre del día */
+export const IconMoon = (p: IconProps) => {
+  const { color, size, sw } = base(p);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+};
+
+/** Chispas — IA / insights */
+export const IconSparkles = (p: IconProps) => {
+  const { color, size, sw } = base(p);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3ZM19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14Z" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+};
+
+/** Gráfico de pastel — distribución de gastos */
+export const IconPie = (p: IconProps) => {
+  const { color, size, sw } = base(p);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M21 15.5A9 9 0 1 1 8.5 3M21 11.5A9 9 0 0 0 12.5 3v8.5H21Z" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+};
+
+/** Estrella — top productos / clientes */
+export const IconStar = (p: IconProps) => {
+  const { color, size, sw } = base(p);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 3l2.6 5.6 6.1.7-4.5 4.1 1.2 6L12 16.9 6.6 19.5l1.2-6L3.3 9.3l6.1-.7L12 3Z" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+};
+
+/** Trofeo — ranking */
+export const IconTrophy = (p: IconProps) => {
+  const { color, size, sw } = base(p);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M8 21h8m-4-4v4m-5-17h10v5a5 5 0 0 1-10 0V4ZM7 5H4v2a3 3 0 0 0 3 3m10-5h3v2a3 3 0 0 1-3 3" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+};
+
+/** Llama — heatmap / actividad */
+export const IconFlame = (p: IconProps) => {
+  const { color, size, sw } = base(p);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 2s5 4 5 9a5 5 0 0 1-10 0c0-1.5.7-2.8 1.5-3.8C9 8.5 9 7 9 7s1 1 1.5 2c.5-2 1.5-4 1.5-7Z" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+};
+
+/** Bot — asistente IA */
+export const IconBot = (p: IconProps) => {
+  const { color, size, sw } = base(p);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x={4} y={8} width={16} height={12} rx={3} stroke={color} strokeWidth={sw} />
+      <Path d="M12 4v4M2 13h2m16 0h2" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+      <Circle cx={9} cy={14} r={1} fill={color} />
+      <Circle cx={15} cy={14} r={1} fill={color} />
+    </Svg>
+  );
+};

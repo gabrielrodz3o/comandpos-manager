@@ -23,7 +23,7 @@ import { InsightsPanel } from '@components/dashboard/InsightsPanel';
 import { MonthlyBarChart } from '@components/charts/MonthlyBarChart';
 import { ExpenseDonut } from '@components/charts/ExpenseDonut';
 import { CashFlowLine } from '@components/charts/CashFlowLine';
-import { Card, LoadingState, InlineFetchingBar, IconMoney, IconTrend, IconBox, IconInvoice, IconLayers } from '@components/ui';
+import { Card, LoadingState, InlineFetchingBar, IconMoney, IconTrend, IconBox, IconInvoice, IconLayers, IconSparkles, IconPie, IconTrophy, IconStore, IconStar, IconCalendar, IconFlame } from '@components/ui';
 import { palette } from '@theme/colors';
 import { fmtCurrency, fmtInt, fmtPct, buName } from '@utils/format';
 import { rangeSpanDays } from '@utils/dates';
@@ -121,7 +121,7 @@ export default function DashboardScreen() {
                 <SectionCard
                   title="Insights automáticos"
                   subtitle="Análisis de tus indicadores"
-                  emoji="✨"
+                  icon={<IconSparkles color={palette.dark.primary} size={18} />}
                 >
                   <InsightsPanel insights={insights} />
                 </SectionCard>
@@ -186,7 +186,7 @@ export default function DashboardScreen() {
               <SectionCard
                 title="Ventas vs Costos y Gastos"
                 subtitle="Tendencia mensual"
-                emoji="📊"
+                icon={<IconTrend color={palette.dark.primary} size={18} />}
               >
                 <MonthlyBarChart data={data.monthly_series} />
               </SectionCard>
@@ -197,7 +197,7 @@ export default function DashboardScreen() {
               <SectionCard
                 title="Distribución de gastos"
                 subtitle="Top categorías"
-                emoji="🥧"
+                icon={<IconPie color={palette.dark.primary} size={18} />}
               >
                 <ExpenseDonut data={data.expense_breakdown} total={summary.gastos_total} />
               </SectionCard>
@@ -208,7 +208,7 @@ export default function DashboardScreen() {
               <SectionCard
                 title="Flujo de caja"
                 subtitle={`Agrupado por ${data.cash_flow_bucket}`}
-                emoji="💵"
+                icon={<IconMoney color={palette.dark.primary} size={18} />}
               >
                 <CashFlowLine data={data.cash_flow} />
               </SectionCard>
@@ -219,7 +219,7 @@ export default function DashboardScreen() {
               <SectionCard
                 title="Productos top"
                 subtitle="Por ingresos"
-                emoji="🏆"
+                icon={<IconTrophy color={palette.dark.primary} size={18} />}
               >
                 <TopProductsList data={data.top_products_profit} />
               </SectionCard>
@@ -230,7 +230,7 @@ export default function DashboardScreen() {
               <SectionCard
                 title="Comparar sucursales"
                 subtitle="Ranking por ventas"
-                emoji="🏬"
+                icon={<IconStore color={palette.dark.primary} size={18} />}
               >
                 <LocationComparison />
               </SectionCard>
@@ -241,7 +241,7 @@ export default function DashboardScreen() {
               <SectionCard
                 title="Top clientes"
                 subtitle="Concentración de ingresos"
-                emoji="👑"
+                icon={<IconStar color={palette.dark.primary} size={18} />}
               >
                 <TopCustomersList data={data.top_customers} />
               </SectionCard>
@@ -252,7 +252,7 @@ export default function DashboardScreen() {
               <SectionCard
                 title="Aging financiero"
                 subtitle="Por cobrar y por pagar"
-                emoji="📅"
+                icon={<IconCalendar color={palette.dark.primary} size={18} />}
               >
                 <AgingCards
                   receivable={data.aging_receivable}
@@ -266,7 +266,7 @@ export default function DashboardScreen() {
               <SectionCard
                 title="Heatmap de ventas"
                 subtitle="Hora × Día — intensidad de actividad"
-                emoji="🔥"
+                icon={<IconFlame color={palette.dark.primary} size={18} />}
               >
                 <HeatmapGrid data={data.heatmap} />
               </SectionCard>
