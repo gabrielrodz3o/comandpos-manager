@@ -3,6 +3,7 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '@utils/logger';
+import { api } from './apiClient';
 
 const NOTIF_PREFS_KEY = 'comandpos-notif-prefs';
 
@@ -53,7 +54,9 @@ export const saveNotifPrefs = async (prefs: NotificationPrefs): Promise<void> =>
 
 /** Solicita permisos y registra el push token. Devuelve token o null. */
 export const registerForPushNotifications = async (): Promise<string | null> => {
+  console.log('🔵 [app/1] registerForPushNotifications() llamado');
   if (!Device.isDevice) {
+    console.log('🟠 [app/1] Device.isDevice=false → SIMULADOR. No se puede obtener push token aquí. Usa un iPhone físico.');
     logger.warn('[notif]', 'must use a physical device');
     return null;
   }
@@ -81,9 +84,11 @@ export const registerForPushNotifications = async (): Promise<string | null> => 
 
   try {
     const tokenData = await Notifications.getExpoPushTokenAsync();
+    console.log('🟢 [app/1] Expo push token obtenido:', tokenData.data);
     logger.info('[notif]', 'expo push token:', tokenData.data);
     return tokenData.data;
   } catch (e) {
+    console.log('🔴 [app/1] getExpoPushTokenAsync falló:', e);
     logger.error('[notif]', 'getExpoPushTokenAsync failed', e);
     return null;
   }
@@ -103,4 +108,34 @@ export const sendTestNotification = async (): Promise<void> => {
 
 export const cancelAllNotifications = async (): Promise<void> => {
   await Notifications.cancelAllScheduledNotificationsAsync();
+};
+
+/** Envía el token + preferencias al backend para recibir push (cierre de caja, etc.). */
+export const syncPushToken = async (token: string, prefs: NotificationPrefs): Promise<void> => {
+  console.log('🔵 [app/2] syncPushToken() → enviando token al backend:', token.slice(0, 25) + '...');
+  try {
+    await api.post('/api/users/push-token', {
+      token,
+      platform: Platform.OS,
+      enabled: prefs.enabled,
+      prefs: {
+        cajaCierre: prefs.cajaCierre,
+        ventasUmbral: prefs.ventasUmbral,
+        inactividad: prefs.inactividad,
+      },
+    });
+    console.log('🟢 [app/2] token enviado al backend OK');
+  } catch (e) {
+    console.log('🔴 [app/2] syncPushToken falló (¿el backend es alcanzable desde el device? ¿URL/env correcta?):', e);
+    logger.error('[notif]', 'syncPushToken failed', e);
+  }
+};
+
+/** Desregistra el token en el backend (logout o desactivar notificaciones). */
+export const disablePushToken = async (token?: string): Promise<void> => {
+  try {
+    await api.delete('/api/users/push-token', { data: token ? { token } : {} });
+  } catch (e) {
+    logger.error('[notif]', 'disablePushToken failed', e);
+  }
 };

@@ -9,6 +9,8 @@ import {
   saveNotifPrefs,
   registerForPushNotifications,
   sendTestNotification,
+  syncPushToken,
+  disablePushToken,
   type NotificationPrefs,
 } from '@services/notifications';
 
@@ -59,6 +61,10 @@ export default function NotificationsSettingsScreen() {
   const persist = async (next: NotificationPrefs) => {
     setPrefs(next);
     await saveNotifPrefs(next);
+    // Mantén el backend al día con las preferencias mientras esté activo.
+    if (next.enabled && next.expoPushToken) {
+      await syncPushToken(next.expoPushToken, next);
+    }
   };
 
   const onToggleMain = async (v: boolean) => {
@@ -76,6 +82,7 @@ export default function NotificationsSettingsScreen() {
       }
       await persist({ ...prefs, enabled: true, expoPushToken: token });
     } else {
+      if (prefs.expoPushToken) await disablePushToken(prefs.expoPushToken);
       await persist({ ...prefs, enabled: false });
     }
     setSavingMain(false);

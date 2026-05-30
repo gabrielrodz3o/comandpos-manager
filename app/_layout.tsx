@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import { initSentry } from '@services/sentry';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -35,6 +36,34 @@ function HealthCheckMount() {
   return null;
 }
 
+/** Enruta al detalle correspondiente cuando el usuario toca una push. */
+function NotificationRouter() {
+  const router = useRouter();
+  useEffect(() => {
+    const handle = (response: Notifications.NotificationResponse | null) => {
+      const data = response?.notification.request.content.data as
+        | { type?: string; entryId?: number | string }
+        | undefined;
+      console.log('🔵 [app/6] notificación tocada. data=', JSON.stringify(data));
+      if (!data) return;
+      if (data.type === 'box_closure' && data.entryId != null) {
+        console.log(`🟢 [app/6] deep-link → abriendo detalle del cierre id=${data.entryId}`);
+        router.push({
+          pathname: '/(tabs)/reports/boxes/[id]',
+          params: { id: String(data.entryId) },
+        });
+      }
+    };
+
+    // App abierta desde una notificación (cold start)
+    void Notifications.getLastNotificationResponseAsync().then(handle);
+    // Tap mientras la app corre / en background
+    const sub = Notifications.addNotificationResponseReceivedListener(handle);
+    return () => sub.remove();
+  }, [router]);
+  return null;
+}
+
 export default function RootLayout() {
   useEffect(() => {
     initSentry();
@@ -54,6 +83,7 @@ export default function RootLayout() {
           <StatusBar style="dark" />
           <OnboardingTour />
           <HealthCheckMount />
+          <NotificationRouter />
           <Stack
             screenOptions={{
               headerShown: false,
