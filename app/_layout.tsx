@@ -10,7 +10,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { palette } from '@theme/colors';
-import { OnboardingTour } from '@components/ui';
+import { OnboardingTour, ToastHost } from '@components/ui';
 import { useUserHealthCheck } from '@hooks/useUserHealthCheck';
 
 const queryClient = new QueryClient({
@@ -96,6 +96,7 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
           </Stack>
+          <ToastHost />
         </PersistQueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

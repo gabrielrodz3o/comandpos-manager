@@ -1,6 +1,14 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@store/useAuthStore';
+import { showToast } from '@store/useToastStore';
 import { logger } from '@utils/logger';
+
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    /** Si es true, el interceptor no muestra toast de error (el llamador lo maneja). */
+    skipErrorToast?: boolean;
+  }
+}
 
 interface NormalizedError {
   message: string;
@@ -87,11 +95,38 @@ class ApiClient {
       },
       (error: AxiosError) => {
         const normalized = normalizeError(error);
-        logger.error('[api] ✗', normalized.status, normalized.message, error.config?.url);
 
-        if (normalized.status === 401) {
+        const hadSession = !!useAuthStore.getState().token;
+        const isTimeout = error.code === 'ECONNABORTED';
+        const isNetwork = !error.response && !!error.request;
+        const isSessionExpired = normalized.status === 401 && hadSession;
+        // Requests con manejo propio de error (p.ej. fallback) pueden silenciar el toast.
+        const skipToast = error.config?.skipErrorToast;
+
+        // Las requests que manejan su propio error se registran como debug, no como error.
+        if (skipToast) {
+          logger.debug('[api] ✗ (manejado)', normalized.status, normalized.message, error.config?.url);
+        } else {
+          logger.error('[api] ✗', normalized.status, normalized.message, error.config?.url);
+        }
+
+        // El logout en 401 ocurre siempre, sin importar el toast.
+        // (Un 401 en el login sin sesión activa lo maneja la pantalla.)
+        if (isSessionExpired) {
           logger.warn('[api]', '401 received → logout');
           useAuthStore.getState().logout();
+        }
+
+        if (!skipToast) {
+          if (isTimeout) {
+            showToast({ message: 'La conexión tardó demasiado. Intenta de nuevo.', variant: 'warning' });
+          } else if (isNetwork) {
+            showToast({ message: 'Sin conexión con el servidor. Verifica tu internet.', variant: 'error' });
+          } else if (isSessionExpired) {
+            showToast({ message: 'Tu sesión expiró. Inicia sesión de nuevo.', variant: 'warning' });
+          } else if (normalized.status && normalized.status >= 500) {
+            showToast({ message: 'Error del servidor. Intenta más tarde.', variant: 'error' });
+          }
         }
 
         (error as AxiosError & { normalized?: NormalizedError }).normalized = normalized;

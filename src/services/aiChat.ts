@@ -34,7 +34,9 @@ interface ChatResponse {
  */
 export const chatWithAi = async (req: ChatRequest): Promise<ChatResponse> => {
   try {
-    const { data } = await api.post<ChatResponse>('/api/ai/chat', req);
+    const { data } = await api.post<ChatResponse>('/api/ai/chat', req, {
+      skipErrorToast: true,
+    });
     return data;
   } catch (e) {
     logger.warn('[ai-chat]', 'endpoint not available, using fallback');
