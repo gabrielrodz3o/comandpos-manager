@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Alert, Linking } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert, Linking, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { useAuthStore } from '@store/useAuthStore';
 import { useBusinessStore } from '@store/useBusinessStore';
-import { Card, IconUsers, IconTable, IconInvoice, IconLogout } from '@components/ui';
+import { useSecurityStore } from '@store/useSecurityStore';
+import { Card, IconUsers, IconTable, IconInvoice, IconLogout, IconTrend } from '@components/ui';
 import { palette, shadow } from '@theme/colors';
 import { buName } from '@utils/format';
 
@@ -75,6 +77,29 @@ export default function SettingsScreen() {
   const { user, logout } = useAuthStore();
   const businessReset = useBusinessStore((s) => s.reset);
   const bu = useBusinessStore((s) => s.activeBusinessUnit);
+  const appLockEnabled = useSecurityStore((s) => s.appLockEnabled);
+  const setAppLockEnabled = useSecurityStore((s) => s.setAppLockEnabled);
+
+  const handleToggleAppLock = async (next: boolean) => {
+    if (!next) {
+      setAppLockEnabled(false);
+      return;
+    }
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const enrolled = await LocalAuthentication.isEnrolledAsync();
+    if (!hasHardware || !enrolled) {
+      Alert.alert(
+        'Sin biometría configurada',
+        'Tu dispositivo no tiene Face ID, Touch ID ni código configurado. Actívalo en los ajustes del sistema para usar el bloqueo.',
+      );
+      return;
+    }
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Confirma tu identidad para activar el bloqueo',
+      disableDeviceFallback: false,
+    });
+    if (result.success) setAppLockEnabled(true);
+  };
 
   const handleLogout = () => {
     Alert.alert('Cerrar sesión', '¿Estás seguro?', [
@@ -179,6 +204,11 @@ export default function SettingsScreen() {
               icon={<IconInvoice color={palette.dark.textDim} size={19} />}
               label="Facturas"
               onPress={() => router.push('/(tabs)/settings/invoices')}
+            />
+            <Row
+              icon={<IconTrend color={palette.dark.textDim} size={19} />}
+              label="Metas del mes"
+              onPress={() => router.push('/(tabs)/settings/goals')}
               isLast
             />
           </View>
@@ -201,6 +231,37 @@ export default function SettingsScreen() {
               destructive
               isLast
             />
+          </View>
+        </Card>
+
+        {/* Seguridad */}
+        <SectionTitle>SEGURIDAD</SectionTitle>
+        <Card variant="default" padded={false}>
+          <View style={{ paddingHorizontal: 18 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingVertical: 12,
+                gap: 12,
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: palette.dark.textDim, fontSize: 13, fontWeight: '500' }}>
+                  Bloqueo con Face ID / código
+                </Text>
+                <Text style={{ color: palette.dark.textMuted, fontSize: 11, marginTop: 2 }}>
+                  Pide verificación al abrir la app
+                </Text>
+              </View>
+              <Switch
+                value={appLockEnabled}
+                onValueChange={handleToggleAppLock}
+                trackColor={{ false: palette.dark.soft, true: palette.dark.primary }}
+                thumbColor="#fff"
+              />
+            </View>
           </View>
         </Card>
 

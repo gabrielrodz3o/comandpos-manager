@@ -74,11 +74,20 @@ const buildBody = (
  * Snapshot para la pantalla Hoy con rango configurable.
  * Auto-refresh cada 60s.
  */
-export const useTodaySnapshot = (range: TodayRange = 'today') => {
+export const useTodaySnapshot = (
+  range: TodayRange = 'today',
+  opts?: { startTime?: string | null; endTime?: string | null },
+) => {
   const buId = useBusinessStore((s) => s.activeBusinessUnitId);
   const selectedLocationId = useBusinessStore((s) => s.selectedLocationId);
   const activeBu = useBusinessStore((s) => s.activeBusinessUnit);
   const eff = useEffectiveLocationId();
+
+  const startTime = opts?.startTime ?? null;
+  const endTime = opts?.endTime ?? null;
+  // Compone 'YYYY-MM-DD HH:mm:ss' si hay franja horaria; si no, fecha pura.
+  const withStart = (date: string) => (startTime ? `${date} ${startTime}:00` : date);
+  const withEnd = (date: string) => (endTime ? `${date} ${endTime}:59` : date);
 
   const current = computeRange(range);
   const previous = previousRange(range);
@@ -86,10 +95,10 @@ export const useTodaySnapshot = (range: TodayRange = 'today') => {
   const activeLocIds = filterActiveLocations(activeBu?.locations ?? []).map((l) => l.id);
 
   const currentQ = useQuery({
-    queryKey: ['today-overview', buId, selectedLocationId, current.start, current.end],
+    queryKey: ['today-overview', buId, selectedLocationId, current.start, current.end, startTime, endTime],
     queryFn: async () => {
       if (!buId) throw new Error('No BU');
-      const body = buildBody(buId, current.start, current.end, selectedLocationId, activeLocIds);
+      const body = buildBody(buId, withStart(current.start), withEnd(current.end), selectedLocationId, activeLocIds);
       logger.info('[today-current]', body);
       const data = await fetchFinancialOverview(body);
       logger.info('[today-current]', 'result', {
@@ -104,10 +113,10 @@ export const useTodaySnapshot = (range: TodayRange = 'today') => {
   });
 
   const prevQ = useQuery({
-    queryKey: ['today-prev', buId, selectedLocationId, previous.start, previous.end],
+    queryKey: ['today-prev', buId, selectedLocationId, previous.start, previous.end, startTime, endTime],
     queryFn: async () => {
       if (!buId) throw new Error('No BU');
-      const body = buildBody(buId, previous.start, previous.end, selectedLocationId, activeLocIds);
+      const body = buildBody(buId, withStart(previous.start), withEnd(previous.end), selectedLocationId, activeLocIds);
       return fetchFinancialOverview(body);
     },
     enabled: !!buId,

@@ -11,7 +11,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { Card, LoadingState, InlineFetchingBar } from '@components/ui';
+import { Card, LoadingState, InlineFetchingBar, RangePickerSheet, fmtTime12 } from '@components/ui';
+import type { RangeSelection } from '@components/ui';
 import { LocationSelector } from '@components/dashboard/LocationSelector';
 import { ActiveLocationBanner } from '@components/reports/ActiveLocationBanner';
 import { palette, shadow } from '@theme/colors';
@@ -77,12 +78,28 @@ export default function InvoicesScreen() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [activePresetKey, setActivePresetKey] = useState<string>('7d');
+  const [custom, setCustom] = useState<RangeSelection | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const activePreset = useMemo(
     () => PRESETS.find((p) => p.key === activePresetKey) ?? PRESETS[1],
     [activePresetKey],
   );
-  const range = useMemo(() => computeRange(activePreset), [activePreset]);
+  // Rango efectivo: personalizado (con hora opcional) o el del preset.
+  const range = useMemo(
+    () =>
+      custom
+        ? { start: custom.start, end: custom.end }
+        : computeRange(activePreset),
+    [custom, activePreset],
+  );
+  const startTime = custom?.startTime ?? null;
+  const endTime = custom?.endTime ?? null;
+
+  // El backend de búsqueda compara timestamps directos: mandamos el día
+  // completo (o la franja horaria elegida) para no excluir las facturas de hoy.
+  const queryStart = `${range.start} ${startTime ? `${startTime}:00` : '00:00:00'}`;
+  const queryEnd = `${range.end} ${endTime ? `${endTime}:59` : '23:59:59'}`;
 
   const {
     invoices,
@@ -98,8 +115,8 @@ export default function InvoicesScreen() {
     isFetchingNextPage,
   } = useInvoicesSearchInfinite({
     search: search.trim() || undefined,
-    start_date: range.start,
-    end_date: range.end,
+    start_date: queryStart,
+    end_date: queryEnd,
   });
 
   const totalAmount = invoices.reduce(
@@ -109,6 +126,7 @@ export default function InvoicesScreen() {
 
   const handlePresetChange = (key: string) => {
     Haptics.selectionAsync();
+    setCustom(null);
     setActivePresetKey(key);
   };
 
@@ -165,8 +183,9 @@ export default function InvoicesScreen() {
               Facturas
             </Text>
             <Text style={{ color: palette.dark.textDim, fontSize: 12, fontWeight: '500' }}>
-              {fmtDateShort(range.start)} → {fmtDateShort(range.end)} · {fmtInt(total)} ·{' '}
-              {fmtCurrency(totalAmount)}
+              {fmtDateShort(range.start)} → {fmtDateShort(range.end)}
+              {startTime && endTime ? ` · ${fmtTime12(startTime)}–${fmtTime12(endTime)}` : ''} ·{' '}
+              {fmtInt(total)} · {fmtCurrency(totalAmount)}
             </Text>
           </View>
         </View>
@@ -214,6 +233,36 @@ export default function InvoicesScreen() {
                 </Pressable>
               );
             })}
+            {/* Chip de rango personalizado */}
+            <Pressable
+              onPress={() => {
+                Haptics.selectionAsync();
+                setPickerOpen(true);
+              }}
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 5,
+                backgroundColor: custom ? palette.dark.text : palette.dark.surface,
+                borderWidth: 1,
+                borderColor: custom ? palette.dark.text : palette.dark.border,
+                paddingVertical: 8,
+                paddingHorizontal: 14,
+                borderRadius: 999,
+                opacity: pressed ? 0.85 : 1,
+              })}
+            >
+              <Text style={{ fontSize: 12 }}>📅</Text>
+              <Text
+                style={{
+                  color: custom ? '#FFFFFF' : palette.dark.text,
+                  fontSize: 12,
+                  fontWeight: '700',
+                }}
+              >
+                {custom ? `${fmtDateShort(custom.start)}–${fmtDateShort(custom.end)}` : 'Personalizado'}
+              </Text>
+            </Pressable>
           </ScrollView>
         ) : null}
 
@@ -314,6 +363,25 @@ export default function InvoicesScreen() {
                         <Text style={{ color: palette.dark.text, fontSize: 16, fontWeight: '800' }}>
                           {fmtCurrency(inv.total_amount)}
                         </Text>
+                        {inv.currency_code && inv.currency_code !== 'DOP' ? (
+                          <View
+                            style={{
+                              marginTop: 3,
+                              paddingHorizontal: 7,
+                              paddingVertical: 2,
+                              borderRadius: 999,
+                              backgroundColor: palette.dark.primaryDim,
+                            }}
+                          >
+                            <Text style={{ color: palette.dark.primary, fontSize: 9.5, fontWeight: '800', letterSpacing: 0.3 }}>
+                              {inv.currency_code}
+                              {typeof inv.original_amount === 'number'
+                                ? ` ${inv.original_amount.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                : ''}
+                              {inv.currency_rate ? ` · ${inv.currency_rate}` : ''}
+                            </Text>
+                          </View>
+                        ) : null}
                         {inv.status_name ? (
                           <Text style={{ color: palette.dark.textMuted, fontSize: 10, marginTop: 2 }}>
                             {inv.status_name}
@@ -366,6 +434,23 @@ export default function InvoicesScreen() {
           )}
         </View>
       </ScrollView>
+
+      <RangePickerSheet
+        visible={pickerOpen}
+        initial={
+          custom ?? {
+            start: range.start,
+            end: range.end,
+            startTime: null,
+            endTime: null,
+          }
+        }
+        onClose={() => setPickerOpen(false)}
+        onApply={(sel) => {
+          setCustom(sel);
+          setPickerOpen(false);
+        }}
+      />
     </SafeAreaView>
   );
 }

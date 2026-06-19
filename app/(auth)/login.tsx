@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Rect } from 'react-native-svg';
 import { AxiosError } from 'axios';
 import { useAuthStore } from '@store/useAuthStore';
 import { useBusinessStore } from '@store/useBusinessStore';
@@ -76,6 +76,42 @@ const IconEyeOff = ({ color, size = 20 }: IconProps) => (
       strokeLinecap="round"
       strokeLinejoin="round"
     />
+  </Svg>
+);
+
+const IconArrowRight = ({ color, size = 20 }: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M5 12h14M13 6l6 6-6 6"
+      stroke={color}
+      strokeWidth={2.2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+/** Motivo decorativo: barras ascendentes (identidad financiera de la marca). */
+const HeroBars = () => (
+  <Svg width={200} height={92} viewBox="0 0 200 92" fill="none">
+    {[
+      { x: 0, h: 30 },
+      { x: 34, h: 46 },
+      { x: 68, h: 38 },
+      { x: 102, h: 62 },
+      { x: 136, h: 54 },
+      { x: 170, h: 80 },
+    ].map((b, i) => (
+      <Rect
+        key={i}
+        x={b.x}
+        y={92 - b.h}
+        width={22}
+        height={b.h}
+        rx={6}
+        fill="rgba(255,255,255,0.09)"
+      />
+    ))}
   </Svg>
 );
 
@@ -215,47 +251,62 @@ export default function LoginScreen() {
             }}
           />
 
+          {/* Motivo de barras financieras, anclado abajo */}
+          <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: 16 }}>
+            <HeroBars />
+          </View>
+
           <SafeAreaView edges={['top']}>
-            <View style={{ alignItems: 'center', paddingTop: 28, paddingBottom: 44, paddingHorizontal: 24 }}>
-              {/* Icono real de la app */}
+            <View style={{ alignItems: 'center', paddingTop: 30, paddingBottom: 46, paddingHorizontal: 24 }}>
+              {/* Icono real de la app, con anillo de acento */}
               <Animated.View
                 entering={FadeInDown.delay(80).duration(600).springify().damping(14)}
                 style={{
-                  width: 96,
-                  height: 96,
-                  borderRadius: 26,
-                  backgroundColor: '#FFFFFF',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  ...shadow.hero,
-                  shadowOpacity: 0.35,
+                  padding: 7,
+                  borderRadius: 30,
+                  backgroundColor: 'rgba(255,255,255,0.14)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(255,255,255,0.28)',
                 }}
               >
-                <Image
-                  source={require('../../assets/icon.png')}
-                  style={{ width: 80, height: 80, borderRadius: 20 }}
-                  resizeMode="cover"
-                />
+                <View
+                  style={{
+                    width: 92,
+                    height: 92,
+                    borderRadius: 24,
+                    backgroundColor: '#FFFFFF',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    ...shadow.hero,
+                    shadowColor: '#02160F',
+                    shadowOpacity: 0.4,
+                  }}
+                >
+                  <Image
+                    source={require('../../assets/icon.png')}
+                    style={{ width: 78, height: 78, borderRadius: 19 }}
+                    resizeMode="cover"
+                  />
+                </View>
               </Animated.View>
 
-              <Animated.Text
+              <Animated.View
                 entering={FadeInDown.delay(180).duration(500)}
-                style={{
-                  color: '#FFFFFF',
-                  fontSize: 26,
-                  fontWeight: '800',
-                  letterSpacing: -0.6,
-                  marginTop: 18,
-                }}
+                style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 18 }}
               >
-                ComandPOS
-              </Animated.Text>
+                <Text style={{ color: '#FFFFFF', fontSize: 27, fontWeight: '800', letterSpacing: -0.7 }}>
+                  Comand
+                </Text>
+                <Text style={{ color: '#A7F3D0', fontSize: 27, fontWeight: '800', letterSpacing: -0.7 }}>
+                  POS
+                </Text>
+              </Animated.View>
 
               <Animated.View
                 entering={FadeIn.delay(280).duration(500)}
                 style={{
-                  marginTop: 6,
-                  paddingHorizontal: 12,
+                  marginTop: 8,
+                  paddingHorizontal: 13,
                   paddingVertical: 4,
                   borderRadius: 999,
                   backgroundColor: 'rgba(255,255,255,0.16)',
@@ -263,9 +314,26 @@ export default function LoginScreen() {
                   borderColor: 'rgba(255,255,255,0.22)',
                 }}
               >
-                <Text style={{ color: '#EAFDF5', fontSize: 12, fontWeight: '700', letterSpacing: 2 }}>
+                <Text style={{ color: '#EAFDF5', fontSize: 11, fontWeight: '800', letterSpacing: 3 }}>
                   MANAGER
                 </Text>
+              </Animated.View>
+
+              {/* Propuesta de valor */}
+              <Animated.View
+                entering={FadeIn.delay(360).duration(500)}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 }}
+              >
+                {['Ventas', 'Reportes', 'Metas'].map((t, i) => (
+                  <React.Fragment key={t}>
+                    {i > 0 ? (
+                      <View style={{ width: 3, height: 3, borderRadius: 2, backgroundColor: 'rgba(234,253,245,0.5)' }} />
+                    ) : null}
+                    <Text style={{ color: 'rgba(234,253,245,0.85)', fontSize: 12, fontWeight: '600', letterSpacing: 0.2 }}>
+                      {t}
+                    </Text>
+                  </React.Fragment>
+                ))}
               </Animated.View>
             </View>
           </SafeAreaView>
@@ -390,6 +458,7 @@ export default function LoginScreen() {
               <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '800', letterSpacing: -0.2 }}>
                 {loading ? 'Iniciando…' : 'Iniciar sesión'}
               </Text>
+              {loading ? null : <IconArrowRight color="#FFFFFF" size={19} />}
             </LinearGradient>
           </Pressable>
 

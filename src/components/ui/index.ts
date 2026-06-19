@@ -7,4 +7,5 @@ export * from './SearchButton';
 export * from './Onboarding';
 export * from './FancySkeleton';
 export * from './ToastHost';
+export * from './RangePickerSheet';
 export * from './icons';

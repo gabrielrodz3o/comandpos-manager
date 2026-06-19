@@ -10,6 +10,8 @@ interface KpiCardProps {
   emoji?: string;
   icon?: React.ReactNode;
   delta?: number;
+  /** Si es true, un delta positivo es malo (ej. gastos): se pinta en rojo. */
+  invertDelta?: boolean;
   hint?: string;
   accent?: string;
   variant?: 'default' | 'hero';
@@ -20,6 +22,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
   value,
   icon,
   delta,
+  invertDelta,
   hint,
   accent,
   variant = 'default',
@@ -28,6 +31,8 @@ export const KpiCard: React.FC<KpiCardProps> = ({
   const isHero = variant === 'hero';
   const showDelta = typeof delta === 'number' && Number.isFinite(delta);
   const positive = (delta ?? 0) >= 0;
+  // Dirección "buena": normalmente subir es bueno; con invertDelta, bajar es bueno.
+  const good = invertDelta ? (delta ?? 0) <= 0 : positive;
 
   const heroGradient: [string, string] = [accent ?? '#0A0A0B', '#1F1F23'];
 
@@ -179,7 +184,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              backgroundColor: positive ? '#ECFDF5' : '#FEF2F2',
+              backgroundColor: good ? '#ECFDF5' : '#FEF2F2',
               paddingHorizontal: 7,
               paddingVertical: 2,
               borderRadius: 6,
@@ -187,7 +192,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
           >
             <Text
               style={{
-                color: positive ? c.success : c.danger,
+                color: good ? c.success : c.danger,
                 fontSize: 10.5,
                 fontWeight: '700',
               }}

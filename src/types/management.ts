@@ -65,6 +65,8 @@ export interface InvoiceSearchResult {
   invoice_ncf?: string;
   emission_date?: string;
   total_amount: number;
+  original_amount?: number;
+  currency_rate?: number;
   subtotal_amount?: number;
   taxes_amount?: number;
   invoice_tip?: number;

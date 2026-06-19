@@ -118,6 +118,16 @@ export interface FinancialOverviewResponse {
   top_customers: TopCustomer[];
   top_suppliers?: unknown[];
   top_products_profit: TopProduct[];
+  /** Resumen del período anterior (mismo largo) para calcular deltas. */
+  previous?: {
+    start_date: string;
+    end_date: string;
+    ventas_total: number;
+    compras_total: number;
+    gastos_total: number;
+    utilidad_bruta: number;
+    utilidad_neta: number;
+  } | null;
   errors?: Record<string, string>;
 }
 

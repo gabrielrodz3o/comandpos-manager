@@ -6,7 +6,7 @@ import type { AuthUser } from '@/types/business';
 // URL del backend. Configurable por entorno con EXPO_PUBLIC_API_URL
 // (ej. local en dev). Si no está definida, usa producción.
 const ENV_API_URL = process.env.EXPO_PUBLIC_API_URL?.trim() || undefined;
-export const DEFAULT_API_BASE_URL = ENV_API_URL ?? 'https://restaurante.comandpos.com';
+export const DEFAULT_API_BASE_URL = ENV_API_URL ?? 'https://api.comandpos.com';
 
 interface AuthState {
   apiBaseUrl: string | null;

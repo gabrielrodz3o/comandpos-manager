@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { KpiCard } from '@components/dashboard/KpiCard';
-import { Card, LoadingState, InlineFetchingBar, SearchButton, IconSunrise } from '@components/ui';
+import { Card, LoadingState, InlineFetchingBar, SearchButton, IconSunrise, HourRangeSheet, fmtTime12 } from '@components/ui';
 import { palette, shadow } from '@theme/colors';
 import { fmtCurrency, fmtInt, fmtPct, buName } from '@utils/format';
 import { useTodaySnapshot } from '@hooks/useTodaySnapshot';
@@ -34,6 +34,11 @@ export default function TodayScreen() {
   const router = useRouter();
   const bu = useBusinessStore((s) => s.activeBusinessUnit);
 
+  // Franja horaria opcional del día (null = día completo).
+  const [startTime, setStartTime] = useState<string | null>(null);
+  const [endTime, setEndTime] = useState<string | null>(null);
+  const [hourSheetOpen, setHourSheetOpen] = useState(false);
+
   // Tab Hoy SIEMPRE en modo "today" — vista exclusiva del día actual
   const {
     summary,
@@ -45,7 +50,7 @@ export default function TodayScreen() {
     isRefetching,
     refetch,
     locationName,
-  } = useTodaySnapshot('today');
+  } = useTodaySnapshot('today', { startTime, endTime });
 
   const [now, setNow] = useState(new Date());
   useEffect(() => {
@@ -92,6 +97,37 @@ export default function TodayScreen() {
               {locationName ? ` · ${locationName}` : ''} · Actualizado {formatHour(now)}
             </Text>
           </View>
+
+          {/* Selector de franja horaria del día */}
+          <Pressable
+            onPress={() => setHourSheetOpen(true)}
+            style={({ pressed }) => ({
+              alignSelf: 'flex-start',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              marginTop: 12,
+              paddingVertical: 8,
+              paddingHorizontal: 12,
+              borderRadius: 999,
+              borderWidth: 1,
+              backgroundColor: startTime ? palette.dark.text : palette.dark.surface,
+              borderColor: startTime ? palette.dark.text : palette.dark.border,
+              opacity: pressed ? 0.85 : 1,
+              ...shadow.sm,
+            })}
+          >
+            <Text style={{ fontSize: 13 }}>🕐</Text>
+            <Text
+              style={{
+                color: startTime ? '#FFFFFF' : palette.dark.text,
+                fontSize: 12,
+                fontWeight: '700',
+              }}
+            >
+              {startTime && endTime ? `${fmtTime12(startTime)} – ${fmtTime12(endTime)}` : 'Todo el día'}
+            </Text>
+          </Pressable>
         </View>
 
         <InlineFetchingBar visible={isFetching && !isLoading} label="Actualizando…" />
@@ -355,6 +391,18 @@ export default function TodayScreen() {
           </View>
         )}
       </ScrollView>
+
+      <HourRangeSheet
+        visible={hourSheetOpen}
+        startTime={startTime}
+        endTime={endTime}
+        onClose={() => setHourSheetOpen(false)}
+        onApply={(s, e) => {
+          setStartTime(s);
+          setEndTime(e);
+          setHourSheetOpen(false);
+        }}
+      />
     </SafeAreaView>
   );
 }

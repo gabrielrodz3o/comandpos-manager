@@ -17,7 +17,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.comandpos.manager",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSFaceIDUsageDescription": "ComandPOS usa Face ID para desbloquear la app y proteger el acceso a tu información financiera."
       }
     },
     "android": {
@@ -49,6 +50,12 @@
     "plugins": [
       "expo-router",
       "expo-font",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Comandi usa el micrófono para tus notas de voz."
+        }
+      ],
       [
         "expo-build-properties",
         {

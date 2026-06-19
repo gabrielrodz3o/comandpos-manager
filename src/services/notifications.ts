@@ -1,11 +1,44 @@
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '@utils/logger';
 import { api } from './apiClient';
 
 const NOTIF_PREFS_KEY = 'comandpos-notif-prefs';
+
+/**
+ * Expo Go (SDK 53+) eliminó las push notifications. Importar `expo-notifications`
+ * ahí imprime un error nativo y sus APIs remotas lanzan. Por eso cargamos el
+ * módulo de forma DINÁMICA y solo fuera de Expo Go — así no se importa nunca en
+ * Expo Go y no aparece el error. En development/production build funciona normal.
+ */
+export const isExpoGo =
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+let _notifModule: typeof import('expo-notifications') | null = null;
+const getNotifications = async (): Promise<typeof import('expo-notifications') | null> => {
+  if (isExpoGo) return null;
+  if (!_notifModule) {
+    _notifModule = await import('expo-notifications');
+  }
+  return _notifModule;
+};
+
+// Handler global — cómo se muestran las notificaciones con la app abierta.
+// Se configura una vez, fire-and-forget, solo si el módulo está disponible.
+void (async () => {
+  const Notifications = await getNotifications();
+  Notifications?.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+})();
 
 export interface NotificationPrefs {
   enabled: boolean;
@@ -21,17 +54,6 @@ const DEFAULT_PREFS: NotificationPrefs = {
   ventasUmbral: true,
   inactividad: true,
 };
-
-// Handler global — controla cómo se muestran las notificaciones cuando la app está abierta
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
 
 export const loadNotifPrefs = async (): Promise<NotificationPrefs> => {
   try {
@@ -54,9 +76,13 @@ export const saveNotifPrefs = async (prefs: NotificationPrefs): Promise<void> =>
 
 /** Solicita permisos y registra el push token. Devuelve token o null. */
 export const registerForPushNotifications = async (): Promise<string | null> => {
-  console.log('🔵 [app/1] registerForPushNotifications() llamado');
+  const Notifications = await getNotifications();
+  if (!Notifications) {
+    logger.warn('[notif]', 'push no disponible en Expo Go — usa un development build');
+    return null;
+  }
+
   if (!Device.isDevice) {
-    console.log('🟠 [app/1] Device.isDevice=false → SIMULADOR. No se puede obtener push token aquí. Usa un iPhone físico.');
     logger.warn('[notif]', 'must use a physical device');
     return null;
   }
@@ -84,11 +110,9 @@ export const registerForPushNotifications = async (): Promise<string | null> => 
 
   try {
     const tokenData = await Notifications.getExpoPushTokenAsync();
-    console.log('🟢 [app/1] Expo push token obtenido:', tokenData.data);
     logger.info('[notif]', 'expo push token:', tokenData.data);
     return tokenData.data;
   } catch (e) {
-    console.log('🔴 [app/1] getExpoPushTokenAsync falló:', e);
     logger.error('[notif]', 'getExpoPushTokenAsync failed', e);
     return null;
   }
@@ -96,6 +120,11 @@ export const registerForPushNotifications = async (): Promise<string | null> => 
 
 /** Dispara una notificación local de prueba — para validar setup. */
 export const sendTestNotification = async (): Promise<void> => {
+  const Notifications = await getNotifications();
+  if (!Notifications) {
+    logger.warn('[notif]', 'notificaciones no disponibles en Expo Go');
+    return;
+  }
   await Notifications.scheduleNotificationAsync({
     content: {
       title: '🎯 Notificación de prueba',
@@ -107,12 +136,12 @@ export const sendTestNotification = async (): Promise<void> => {
 };
 
 export const cancelAllNotifications = async (): Promise<void> => {
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  const Notifications = await getNotifications();
+  await Notifications?.cancelAllScheduledNotificationsAsync();
 };
 
 /** Envía el token + preferencias al backend para recibir push (cierre de caja, etc.). */
 export const syncPushToken = async (token: string, prefs: NotificationPrefs): Promise<void> => {
-  console.log('🔵 [app/2] syncPushToken() → enviando token al backend:', token.slice(0, 25) + '...');
   try {
     await api.post('/api/users/push-token', {
       token,
@@ -124,9 +153,7 @@ export const syncPushToken = async (token: string, prefs: NotificationPrefs): Pr
         inactividad: prefs.inactividad,
       },
     });
-    console.log('🟢 [app/2] token enviado al backend OK');
   } catch (e) {
-    console.log('🔴 [app/2] syncPushToken falló (¿el backend es alcanzable desde el device? ¿URL/env correcta?):', e);
     logger.error('[notif]', 'syncPushToken failed', e);
   }
 };

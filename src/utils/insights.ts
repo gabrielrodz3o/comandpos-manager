@@ -134,6 +134,84 @@ export const generateInsights = (data: FinancialOverviewResponse | null): Insigh
     }
   }
 
+  // Ventas vs período anterior
+  if (data.previous && data.previous.ventas_total > 0) {
+    const chg = ((s.ventas_total - data.previous.ventas_total) / data.previous.ventas_total) * 100;
+    if (chg >= 10) {
+      out.push({
+        id: 'sales-vs-prev-up',
+        severity: 'positive',
+        emoji: '🚀',
+        title: `Ventas +${fmtPct(chg)} vs período anterior`,
+        description: `Vas creciendo. Qué hacer: identifica qué cambió (producto, promo, día) y dóblalo.`,
+      });
+    } else if (chg <= -10) {
+      out.push({
+        id: 'sales-vs-prev-down',
+        severity: 'warning',
+        emoji: '🔻',
+        title: `Ventas ${fmtPct(chg)} vs período anterior`,
+        description: `Cayeron respecto al período pasado. Qué hacer: revisa días/horas flojas y reactiva clientes inactivos con una promo puntual.`,
+      });
+    }
+  }
+
+  // Día más flojo / más fuerte (desde el heatmap)
+  if (data.heatmap?.length) {
+    const DAYS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const byDay: Record<number, number> = {};
+    data.heatmap.forEach((h) => {
+      const d = h.day_of_week ?? h.day;
+      if (d == null) return;
+      byDay[d] = (byDay[d] ?? 0) + Number(h.total ?? h.value ?? 0);
+    });
+    const entries = Object.entries(byDay)
+      .map(([d, v]) => [Number(d), v] as [number, number])
+      .filter(([, v]) => v > 0);
+    if (entries.length >= 3) {
+      entries.sort((a, b) => a[1] - b[1]);
+      const weakest = entries[0][0];
+      const strongest = entries[entries.length - 1][0];
+      out.push({
+        id: 'weak-day',
+        severity: 'info',
+        emoji: '📅',
+        title: `Tu día más flojo es el ${DAYS[weakest]}`,
+        description: `Qué hacer: lanza una promo o happy hour los ${DAYS[weakest]} para nivelar la semana, y refuerza personal los ${DAYS[strongest]} (tu día pico).`,
+      });
+    }
+  }
+
+  // Producto estrella (upsell)
+  const star = data.top_products_profit?.[0];
+  if (star && Number(star.profit ?? 0) > 0) {
+    const name = star.name ?? star.item_name ?? 'tu producto top';
+    const margin = Number(star.margin_pct ?? 0);
+    out.push({
+      id: 'star-product',
+      severity: 'positive',
+      emoji: '⭐',
+      title: `Producto estrella: ${name}`,
+      description: `Genera ${fmtCurrency(Number(star.profit))} de utilidad${margin > 0 ? ` (${fmtPct(margin)} margen)` : ''}. Qué hacer: destácalo en el menú y capacita al equipo para sugerirlo.`,
+    });
+  }
+
+  // Categoría de gasto dominante
+  if (data.expense_breakdown?.length && s.gastos_total > 0) {
+    const top = data.expense_breakdown[0] as { category?: string; name?: string; total: number };
+    const catName = top.category ?? top.name ?? 'una categoría';
+    const pct = (Number(top.total) / s.gastos_total) * 100;
+    if (pct > 30) {
+      out.push({
+        id: 'expense-concentration',
+        severity: 'warning',
+        emoji: '🧾',
+        title: `"${catName}" concentra ${fmtPct(pct)} de tus gastos`,
+        description: `Qué hacer: renegocia con ese proveedor o busca alternativas. Un ahorro del 5% aquí cae directo a tu utilidad.`,
+      });
+    }
+  }
+
   // Si no hay nada, mensaje positivo
   if (out.length === 0) {
     out.push({
@@ -145,5 +223,7 @@ export const generateInsights = (data: FinancialOverviewResponse | null): Insigh
     });
   }
 
-  return out;
+  // Prioriza por severidad (críticos primero) y limita a 6 para no abrumar.
+  const weight: Record<InsightSeverity, number> = { critical: 0, warning: 1, positive: 2, info: 3 };
+  return out.sort((a, b) => weight[a.severity] - weight[b.severity]).slice(0, 6);
 };

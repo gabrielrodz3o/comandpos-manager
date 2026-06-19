@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { palette } from '@theme/colors';
 import { fmtCompact, fmtCurrency } from '@utils/format';
 
@@ -34,6 +34,13 @@ const DAY_BACKEND_TO_VISUAL: Record<number, number> = {
 
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 8); // 8am - 11pm
 
+// Dimensiones de la cuadrícula desplazable.
+const CELL = 38;
+const COL_GAP = 3;
+const ROW_GAP = 4;
+const HEADER_H = 18;
+const LABEL_W = 26;
+
 const cellColor = (intensity: number): string => {
   if (intensity <= 0) return palette.dark.soft;
   const alpha = 0.12 + intensity * 0.85;
@@ -42,6 +49,12 @@ const cellColor = (intensity: number): string => {
 
 const cellTextColor = (intensity: number): string =>
   intensity > 0.55 ? '#FFFFFF' : palette.dark.textDim;
+
+const fmtHour = (h: number): string => {
+  if (h === 0) return '12a';
+  if (h === 12) return '12p';
+  return h < 12 ? `${h}a` : `${h - 12}p`;
+};
 
 export const HeatmapGrid: React.FC<Props> = ({ data }) => {
   const { matrix, max } = useMemo(() => {
@@ -80,68 +93,88 @@ export const HeatmapGrid: React.FC<Props> = ({ data }) => {
 
   return (
     <View>
-      {/* Header con horas */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-        <View style={{ width: 22 }} />
-        {HOURS.map((h) => (
-          <Text
-            key={`h-${h}`}
-            style={{
-              flex: 1,
-              color: palette.dark.textMuted,
-              fontSize: 8,
-              fontWeight: '600',
-              textAlign: 'center',
-            }}
-          >
-            {h}
-          </Text>
-        ))}
+      {/* Pista de scroll */}
+      <Text style={{ color: palette.dark.textMuted, fontSize: 10, fontWeight: '600', textAlign: 'right', marginBottom: 8 }}>
+        Desliza para ver todas las horas →
+      </Text>
+
+      <View style={{ flexDirection: 'row' }}>
+        {/* Columna fija de días */}
+        <View>
+          <View style={{ height: HEADER_H, marginBottom: 6 }} />
+          {DAY_LABELS.map((d) => (
+            <View
+              key={`lbl-${d}`}
+              style={{ width: LABEL_W, height: CELL, marginBottom: ROW_GAP, justifyContent: 'center' }}
+            >
+              <Text style={{ color: palette.dark.textDim, fontSize: 11, fontWeight: '700', textAlign: 'center' }}>
+                {d}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Cuadrícula desplazable de horas */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingRight: 4 }}
+        >
+          <View>
+            {/* Header con horas */}
+            <View style={{ flexDirection: 'row', height: HEADER_H, marginBottom: 6 }}>
+              {HOURS.map((h) => (
+                <Text
+                  key={`h-${h}`}
+                  style={{
+                    width: CELL,
+                    marginHorizontal: COL_GAP,
+                    color: palette.dark.textMuted,
+                    fontSize: 9,
+                    fontWeight: '600',
+                    textAlign: 'center',
+                  }}
+                >
+                  {fmtHour(h)}
+                </Text>
+              ))}
+            </View>
+
+            {/* Filas por día */}
+            {DAY_LABELS.map((d, visualDay) => (
+              <View key={`row-${d}`} style={{ flexDirection: 'row', height: CELL, marginBottom: ROW_GAP }}>
+                {HOURS.map((h) => {
+                  const v = matrix[`${visualDay}-${h}`] ?? 0;
+                  const intensity = max > 0 ? v / max : 0;
+                  return (
+                    <View
+                      key={`c-${d}-${h}`}
+                      style={{
+                        width: CELL,
+                        height: CELL,
+                        marginHorizontal: COL_GAP,
+                        backgroundColor: cellColor(intensity),
+                        borderRadius: 6,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {v > 0 ? (
+                        <Text style={{ color: cellTextColor(intensity), fontSize: 10, fontWeight: '700' }}>
+                          {fmtCompact(v)}
+                        </Text>
+                      ) : null}
+                    </View>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </View>
 
-      {/* Rows por día (visual 0=L .. 6=D) */}
-      {DAY_LABELS.map((d, visualDay) => (
-        <View key={`d-${d}`} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
-          <Text
-            style={{
-              width: 22,
-              color: palette.dark.textDim,
-              fontSize: 10,
-              fontWeight: '700',
-              textAlign: 'center',
-            }}
-          >
-            {d}
-          </Text>
-          {HOURS.map((h) => {
-            const v = matrix[`${visualDay}-${h}`] ?? 0;
-            const intensity = max > 0 ? v / max : 0;
-            return (
-              <View
-                key={`c-${d}-${h}`}
-                style={{
-                  flex: 1,
-                  aspectRatio: 1,
-                  backgroundColor: cellColor(intensity),
-                  borderRadius: 3,
-                  marginHorizontal: 1,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {intensity > 0.35 ? (
-                  <Text style={{ color: cellTextColor(intensity), fontSize: 7, fontWeight: '700' }}>
-                    {fmtCompact(v)}
-                  </Text>
-                ) : null}
-              </View>
-            );
-          })}
-        </View>
-      ))}
-
       {/* Leyenda */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
         <Text style={{ color: palette.dark.textMuted, fontSize: 10 }}>menos</Text>
         {[0.15, 0.35, 0.55, 0.75, 0.95].map((i) => (
           <View

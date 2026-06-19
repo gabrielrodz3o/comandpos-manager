@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Stack, useRouter } from 'expo-router';
-import * as Notifications from 'expo-notifications';
 import { initSentry } from '@services/sentry';
+import { isExpoGo } from '@services/notifications';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persi
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { palette } from '@theme/colors';
 import { OnboardingTour, ToastHost } from '@components/ui';
+import { AppLockGate } from '@components/security/AppLockGate';
 import { useUserHealthCheck } from '@hooks/useUserHealthCheck';
 
 const queryClient = new QueryClient({
@@ -40,14 +41,15 @@ function HealthCheckMount() {
 function NotificationRouter() {
   const router = useRouter();
   useEffect(() => {
-    const handle = (response: Notifications.NotificationResponse | null) => {
+    // Expo Go (SDK 53+) no soporta push: evitamos importar el módulo nativo.
+    if (isExpoGo) return;
+
+    const handle = (response: { notification: { request: { content: { data?: unknown } } } } | null) => {
       const data = response?.notification.request.content.data as
         | { type?: string; entryId?: number | string }
         | undefined;
-      console.log('🔵 [app/6] notificación tocada. data=', JSON.stringify(data));
       if (!data) return;
       if (data.type === 'box_closure' && data.entryId != null) {
-        console.log(`🟢 [app/6] deep-link → abriendo detalle del cierre id=${data.entryId}`);
         router.push({
           pathname: '/(tabs)/reports/boxes/[id]',
           params: { id: String(data.entryId) },
@@ -55,11 +57,14 @@ function NotificationRouter() {
       }
     };
 
-    // App abierta desde una notificación (cold start)
-    void Notifications.getLastNotificationResponseAsync().then(handle);
-    // Tap mientras la app corre / en background
-    const sub = Notifications.addNotificationResponseReceivedListener(handle);
-    return () => sub.remove();
+    let sub: { remove: () => void } | undefined;
+    void import('expo-notifications').then((Notifications) => {
+      // App abierta desde una notificación (cold start)
+      void Notifications.getLastNotificationResponseAsync().then(handle);
+      // Tap mientras la app corre / en background
+      sub = Notifications.addNotificationResponseReceivedListener(handle);
+    });
+    return () => sub?.remove();
   }, [router]);
   return null;
 }
@@ -97,6 +102,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
           </Stack>
           <ToastHost />
+          <AppLockGate />
         </PersistQueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
