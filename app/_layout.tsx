@@ -54,6 +54,9 @@ function NotificationRouter() {
           pathname: '/(tabs)/reports/boxes/[id]',
           params: { id: String(data.entryId) },
         });
+      } else if (data.type === 'watchdog') {
+        // Alerta del vigilante → abre Comandi para profundizar.
+        router.push('/(tabs)/comandi');
       }
     };
 

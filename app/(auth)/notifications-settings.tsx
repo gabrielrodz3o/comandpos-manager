@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Switch, Pressable, Alert } from 'react-native';
+import { View, Text, ScrollView, Switch, Pressable, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card, Button } from '@components/ui';
 import { palette } from '@theme/colors';
+import { registerComandiPush } from '@/services/comandiChat';
 import {
   loadNotifPrefs,
   saveNotifPrefs,
@@ -64,6 +65,8 @@ export default function NotificationsSettingsScreen() {
     // Mantén el backend al día con las preferencias mientras esté activo.
     if (next.enabled && next.expoPushToken) {
       await syncPushToken(next.expoPushToken, next);
+      // También registra el token en Comandi (alertas proactivas del vigilante).
+      await registerComandiPush(next.expoPushToken, Platform.OS).catch(() => {});
     }
   };
 

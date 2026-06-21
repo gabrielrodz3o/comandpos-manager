@@ -62,6 +62,24 @@ export async function sendVoiceNote(uri: string, history: Turn[] = [], period: P
   return data;
 }
 
+export interface BizAlert {
+  domain: string;
+  severity: 'alta' | 'media';
+  title: string;
+  detail: string;
+}
+
+/** Vigilante: alertas del negocio (qué necesita atención hoy). */
+export async function fetchAlerts(): Promise<{ count: number; alerts: BizAlert[] }> {
+  const { data } = await comandiApi.post('/comandi/watchdog/check', { ...buildScope() });
+  return { count: data?.count || 0, alerts: data?.alerts || [] };
+}
+
+/** Registra el token de push de Expo en Comandi (para alertas proactivas). */
+export async function registerComandiPush(expoToken: string, platform?: string): Promise<void> {
+  await comandiApi.post('/comandi/push/register', { expo_token: expoToken, platform });
+}
+
 export async function executeAction(token: string) {
   const { data } = await comandiApi.post('/comandi/action/execute', { confirm_token: token });
   return data as { success: boolean; executed?: boolean; already?: boolean; message?: string };

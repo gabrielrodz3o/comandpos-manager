@@ -11,6 +11,7 @@ import { palette, shadow } from '@theme/colors';
 import { fmtCurrency, fmtInt, fmtPct, buName } from '@utils/format';
 import { useTodaySnapshot } from '@hooks/useTodaySnapshot';
 import { useBusinessStore } from '@store/useBusinessStore';
+import AlertsCard from '@/components/AlertsCard';
 
 const formatHour = (d: Date): string =>
   d.toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -138,6 +139,9 @@ export default function TodayScreen() {
           </View>
         ) : (
           <View style={{ paddingHorizontal: 16, gap: 14 }}>
+            {/* Alertas del negocio (vigilante Comandi) */}
+            <AlertsCard />
+
             {/* Hero */}
             <Animated.View entering={FadeInDown.duration(450).springify().damping(16)}>
             <LinearGradient

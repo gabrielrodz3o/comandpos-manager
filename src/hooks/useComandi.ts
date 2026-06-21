@@ -1,13 +1,19 @@
 // Hooks React Query para Comandi (mutations: no se cachean, son acciones).
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   askComandi,
   sendVoiceNote,
   executeAction,
   rejectAction,
+  fetchAlerts,
   type Turn,
   type Period,
 } from '@/services/comandiChat';
+
+/** Alertas del negocio (vigilante). Se refresca al volver a la pantalla. */
+export function useAlerts() {
+  return useQuery({ queryKey: ['comandi-alerts'], queryFn: fetchAlerts, staleTime: 60_000 });
+}
 
 export function useComandiText() {
   return useMutation({
