@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, ScrollView, Pressable, Image, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,6 +31,46 @@ export default function SelectBusinessScreen() {
   const setActiveBusinessUnit = useBusinessStore((s) => s.setActiveBusinessUnit);
 
   const businessUnits = user?.business_units_with_access ?? [];
+
+  const [query, setQuery] = useState('');
+
+  // Normaliza texto: minúsculas y sin acentos para que "panaderia" matchee "Panadería".
+  const norm = (s: unknown): string =>
+    String(s ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '');
+
+  // Índice de búsqueda por empresa: junta todos los campos buscables en un solo string.
+  const searchIndex = useMemo(
+    () =>
+      businessUnits.map((bu) => {
+        const parts: unknown[] = [
+          buName(bu),
+          bu.business_unit_name,
+          bu.business_unit_description,
+          bu.business_unit_description_short,
+          bu.business_unit_description_long,
+          bu.rnc,
+          bu.business_unit_address,
+        ];
+        for (const loc of bu.locations ?? []) {
+          parts.push(loc.name, loc.description_short, loc.description_long, loc.code, loc.address, loc.rnl);
+        }
+        return { bu, haystack: norm(parts.filter(Boolean).join(' ')) };
+      }),
+    [businessUnits],
+  );
+
+  const filteredUnits = useMemo(() => {
+    const q = norm(query).trim();
+    if (!q) return businessUnits;
+    // Cada palabra del query debe aparecer en algún campo (AND entre términos).
+    const terms = q.split(/\s+/);
+    return searchIndex
+      .filter(({ haystack }) => terms.every((t) => haystack.includes(t)))
+      .map(({ bu }) => bu);
+  }, [businessUnits, searchIndex, query]);
 
   const handleSelect = (bu: BusinessUnitAccess) => {
     const activeLocs = filterActiveLocations(bu.locations ?? []);
@@ -86,8 +126,46 @@ export default function SelectBusinessScreen() {
         </SafeAreaView>
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 40, gap: 10 }}>
-        {businessUnits.map((bu, i) => {
+      <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            backgroundColor: palette.dark.soft,
+            borderRadius: 14,
+            paddingHorizontal: 14,
+            height: 48,
+          }}
+        >
+          <Text style={{ color: palette.dark.textDim, fontSize: 16 }}>⌕</Text>
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Buscar empresa o RNC"
+            placeholderTextColor={palette.dark.textDim}
+            autoCorrect={false}
+            autoCapitalize="none"
+            returnKeyType="search"
+            style={{ flex: 1, color: palette.dark.text, fontSize: 15, fontWeight: '500' }}
+          />
+          {query.length > 0 ? (
+            <Pressable onPress={() => setQuery('')} hitSlop={10}>
+              <Text style={{ color: palette.dark.textDim, fontSize: 16, fontWeight: '700' }}>✕</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
+
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 40, gap: 10 }}>
+        {filteredUnits.length === 0 ? (
+          <View style={{ alignItems: 'center', paddingTop: 40 }}>
+            <Text style={{ color: palette.dark.textDim, fontSize: 14, fontWeight: '500' }}>
+              No se encontraron empresas
+            </Text>
+          </View>
+        ) : null}
+        {filteredUnits.map((bu, i) => {
           const locCount = filterActiveLocations(bu.locations ?? []).length;
           const logoUrl = pbImageUrl(bu.business_unit_image_storage);
           return (

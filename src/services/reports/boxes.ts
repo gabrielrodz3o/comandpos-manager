@@ -1,5 +1,10 @@
 import { api } from '@services/apiClient';
-import type { BoxEntry, BoxInvoice, BoxSalesDay } from '@/types/reports';
+import type {
+  BoxEntry,
+  BoxInvoice,
+  BoxSalesDay,
+  BoxDenominationGroup,
+} from '@/types/reports';
 
 interface BoxListParams {
   location_id: number;
@@ -31,4 +36,18 @@ export const fetchBoxSalesDay = async (box_entry_id: number): Promise<BoxSalesDa
     box_entry_id,
   });
   return data;
+};
+
+/**
+ * Desglose físico de billetes/monedas contado al cierre (cierre avanzado).
+ * Devuelve [] si la sucursal no usa cierre avanzado o el cierre es antiguo.
+ */
+export const fetchBoxDenominations = async (
+  box_entry_id: number,
+): Promise<BoxDenominationGroup[]> => {
+  const { data } = await api.get<BoxDenominationGroup[]>(
+    `/api/restaurant/boxes/get-box-entry-denominations?box_entry_id=${box_entry_id}`,
+    { skipErrorToast: true },
+  );
+  return Array.isArray(data) ? data : [];
 };

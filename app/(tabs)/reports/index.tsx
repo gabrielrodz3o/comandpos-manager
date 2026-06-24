@@ -20,7 +20,10 @@ const REPORTS: ReportItem[] = [
   { key: 'waiter-sales',       href: '/(tabs)/reports/waiter-sales',   title: 'Por Mesero',       description: 'Performance del equipo de salón',  icon: <IconUsers color="#2563EB" size={22} />, tint: '#EFF6FF' },
   { key: 'tips-analysis',      href: '/(tabs)/reports/tips-analysis',  title: 'Propinas',         description: 'Análisis y distribución',          icon: <IconMoney color="#D97706" size={22} />, tint: '#FFFBEB' },
   { key: 'profit-loss',        href: '/(tabs)/reports/profit-loss',        title: 'Estado de Resultados', description: 'P&L del período',                  icon: <IconTrend color="#7C3AED" size={22} />, tint: '#F5F3FF' },
+  { key: 'cost-analysis',      href: '/(tabs)/reports/cost-analysis',      title: 'Análisis de Costos',   description: 'Food cost, margen y rentabilidad', icon: <IconTrend color="#0891B2" size={22} />, tint: '#ECFEFF' },
+  { key: 'cash-position',      href: '/(tabs)/reports/cash-position',      title: 'Posición de Efectivo', description: 'Cajas, bóveda y bancos consolidados', icon: <IconMoney color="#059669" size={22} />, tint: '#ECFDF5' },
   { key: 'purchases-expenses', href: '/(tabs)/reports/purchases-expenses', title: 'Compras y Gastos',     description: 'Proveedores y categorías',         icon: <IconInvoice color="#DB2777" size={22} />, tint: '#FDF2F8' },
+  { key: 'control',            href: '/(tabs)/reports/control',            title: 'Control / Auditoría',  description: 'Descuentos, cortesías, anulados, precios', icon: <IconInvoice color="#DC2626" size={22} />, tint: '#FEF2F2' },
   { key: 'boxes',              href: '/(tabs)/reports/boxes',              title: 'Cajas',                description: 'Aperturas, cierres y diferencias', icon: <IconMoney color="#0D9488" size={22} />, tint: '#F0FDFA' },
 ];
 

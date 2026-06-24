@@ -5,6 +5,7 @@ import {
   fetchBoxEntryDetail,
   fetchBoxInvoices,
   fetchBoxSalesDay,
+  fetchBoxDenominations,
 } from '@services/reports/boxes';
 import { useEffectiveLocationId } from './useEffectiveLocationId';
 import { logger } from '@utils/logger';
@@ -63,4 +64,15 @@ export const useBoxSalesDay = (box_entry_id: number | null) =>
     },
     enabled: !!box_entry_id,
     staleTime: 30_000,
+  });
+
+export const useBoxDenominations = (box_entry_id: number | null) =>
+  useQuery({
+    queryKey: ['box-denominations', box_entry_id],
+    queryFn: () => {
+      if (!box_entry_id) throw new Error('No box id');
+      return fetchBoxDenominations(box_entry_id);
+    },
+    enabled: !!box_entry_id,
+    staleTime: 60_000,
   });

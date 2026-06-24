@@ -10,10 +10,11 @@ import {
   fetchARSummary,
   fetchARAging,
   fetchShiftCalendar,
+  fetchKardexGeneral,
 } from '@services/operations';
 import { useEffectiveLocationId } from './useEffectiveLocationId';
 import { logger } from '@utils/logger';
-import type { InventoryItem } from '@/types/operations';
+import type { InventoryItem, KardexFilters, KardexSourceType } from '@/types/operations';
 
 export const useWarehouses = () => {
   const eff = useEffectiveLocationId();
@@ -72,7 +73,9 @@ export const useInventory = (selectedWarehouseIds: number[] | null) => {
       });
     },
     enabled: !!eff.locationId && effectiveWarehouseIds.length > 0,
-    staleTime: 60_000,
+    staleTime: 30_000,
+    // El snapshot debe reflejar movimientos recientes al volver a la app.
+    refetchOnWindowFocus: true,
   });
 
   // 1 fila por ITEM (no por warehouse). Agrega cantidades y elige el peor status.
@@ -146,6 +149,61 @@ export const useInventory = (selectedWarehouseIds: number[] | null) => {
   }, [query.data]);
 
   return { ...query, eff, items };
+};
+
+export interface UseKardexArgs {
+  start_date: string;
+  end_date: string;
+  source_type?: KardexSourceType | null;
+  search?: string | null;
+  warehouse_ids?: number[] | null;
+  page?: number;
+  limit?: number;
+}
+
+/**
+ * Kardex / movimientos de inventario del rango seleccionado.
+ * Con "Hoy" por defecto trae las transacciones del día. staleTime corto +
+ * refetchOnWindowFocus para que las transacciones recién registradas aparezcan.
+ */
+export const useKardex = (args: UseKardexArgs) => {
+  const eff = useEffectiveLocationId();
+  const buId = useBusinessStore((s) => s.activeBusinessUnitId);
+
+  const query = useQuery({
+    queryKey: [
+      'kardex',
+      buId,
+      eff.locationId,
+      args.start_date,
+      args.end_date,
+      args.source_type ?? 'all',
+      args.search ?? '',
+      args.warehouse_ids ?? 'all',
+      args.limit ?? 50,
+    ],
+    queryFn: () => {
+      if (!buId) throw new Error('No business unit');
+      const filters: KardexFilters = {
+        business_unit_id: buId,
+        location_id: eff.locationId ?? null,
+        warehouse_ids: args.warehouse_ids ?? null,
+        source_type: args.source_type ?? null,
+        start_date: args.start_date,
+        end_date: args.end_date,
+        search: args.search ?? null,
+        page: args.page ?? 1,
+        limit: args.limit ?? 50,
+      };
+      logger.info('[kardex]', { buId, locationId: eff.locationId, ...args });
+      return fetchKardexGeneral(filters);
+    },
+    enabled: !!buId && !!args.start_date && !!args.end_date,
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+  });
+
+  return { ...query, eff };
 };
 
 export const useEmployeeDetail = (id: number | null) =>

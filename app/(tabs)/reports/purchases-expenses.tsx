@@ -17,9 +17,22 @@ export default function PurchasesExpensesScreen() {
   const suppliers = data?.top_suppliers ?? [];
   const recent = data?.recent ?? [];
 
+  // El backend a veces devuelve el `summary` con totales en 0 aunque los
+  // desgloses (expense_breakdown / top_suppliers) sí traen montos. En ese caso
+  // derivamos los KPIs sumando los desgloses para no mostrar RD$0 incorrecto.
+  const sumBy = <T,>(arr: T[], key: keyof T): number =>
+    arr.reduce((acc, x) => acc + (Number(x?.[key]) || 0), 0);
+
+  const totalExpenses = Number(summary?.total_expenses) || sumBy(expenses, 'total');
+  const totalPurchases = Number(summary?.total_purchases) || sumBy(suppliers, 'purchases_total');
   const totalCombined =
-    summary?.total_combined ??
-    (Number(summary?.total_purchases ?? 0) + Number(summary?.total_expenses ?? 0));
+    Number(summary?.total_combined) || totalPurchases + totalExpenses;
+  const unclassifiedTotal =
+    Number(summary?.unclassified_expenses_total) ||
+    sumBy(expenses.filter((e) => e.is_unclassified), 'total');
+  const unclassifiedPct =
+    Number(summary?.unclassified_pct) ||
+    (totalExpenses > 0 ? (unclassifiedTotal / totalExpenses) * 100 : 0);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.dark.bg }} edges={['top']}>
@@ -65,13 +78,13 @@ export default function PurchasesExpensesScreen() {
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <KpiCard
                   label="Compras"
-                  value={fmtCurrency(summary.total_purchases)}
+                  value={fmtCurrency(totalPurchases)}
                   emoji="🛍️"
                   hint={`${fmtInt(summary.purchases_count)} órdenes`}
                 />
                 <KpiCard
                   label="Gastos"
-                  value={fmtCurrency(summary.total_expenses)}
+                  value={fmtCurrency(totalExpenses)}
                   emoji="🧾"
                   hint={`${fmtInt(summary.expenses_count)} registros`}
                 />
@@ -80,9 +93,9 @@ export default function PurchasesExpensesScreen() {
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <KpiCard
                     label="Sin clasificar"
-                    value={fmtCurrency(summary.unclassified_expenses_total)}
+                    value={fmtCurrency(unclassifiedTotal)}
                     emoji="⚠️"
-                    hint={`${fmtPct(summary.unclassified_pct)} del total`}
+                    hint={`${fmtPct(unclassifiedPct)} del total`}
                   />
                   <KpiCard
                     label="Días sin egresos"

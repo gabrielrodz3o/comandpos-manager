@@ -683,53 +683,130 @@ export interface BoxInvoice {
   [key: string]: unknown;
 }
 
+// ⚠️ La forma de estos tipos refleja EXACTAMENTE lo que devuelve la función SQL
+// `finances.get_box_shift_payments_new` (mismo endpoint que consume la web:
+// POST /api/restaurant/boxes/sales-boxes-day). NO inventar campos: la versión
+// anterior leía `sales_card_income`, `expenses_total`, `movements_total`,
+// `courtesy_total`, `s.movements[]`, `s.courtesies[]` — ninguno existe en la
+// respuesta, por eso los montos salían en 0 / la diferencia salía "rara".
+
+/** Balance de efectivo de una caja (la SP ya entrega esperado/diferencia/estado). */
+export interface BoxBalance {
+  initial_amount: number;
+  /** Ventas cobradas en efectivo durante el turno. */
+  sales_cash_income?: number;
+  /** Compras pagadas en efectivo (egreso). */
+  purchases_cash_outcome?: number;
+  /** Entradas manuales de efectivo (cobros, reintegros, etc.). */
+  manual_entries?: number;
+  /** Salidas manuales de efectivo (sangrías, gastos, etc.). */
+  manual_exits?: number;
+  /** Solo informativo — utilidad perdida, NO mueve caja. */
+  courtesies_amount?: number;
+  /** = sales_cash_income + manual_entries */
+  total_income?: number;
+  /** = purchases_cash_outcome + manual_exits */
+  total_outcome?: number;
+  /** = initial + ingresos − egresos (lo que DEBERÍA haber en gaveta). */
+  expected_balance?: number;
+  /** Efectivo físico declarado al cerrar (null si sigue abierta). */
+  closed_amount: number | null;
+  /** = closed_amount − expected_balance (null si abierta). */
+  difference?: number | null;
+  is_balanced?: boolean | null;
+  /** SIN_CERRAR | CUADRADA | SOBRANTE | FALTANTE (la SP no marca ABIERTA). */
+  status?: string;
+  is_closed?: boolean;
+}
+
+/** Una fila de pago agrupada por método (incluye CRÉDITO con id -1). */
+export interface BoxPayment {
+  payment_type_id: number;
+  payment_type_name: string;
+  total_ingresos: number;
+  total_egresos: number;
+  total_neto: number;
+  sales_count: number;
+  purchase_count: number;
+  payment_count: number;
+  invoice_count: number;
+  currency_code?: string;
+  /** Plataforma externa (PedidosYa/Uber): liquida la plataforma, no es efectivo. */
+  is_external?: boolean;
+  credit_count?: number;
+  total_credito_pendiente?: number;
+}
+
+export interface BoxManualMovement {
+  movement_type: string;
+  concept?: string;
+  amount: number;
+  /** 'in' = entrada, 'out' = salida (espejo de box_movement_types.direction). */
+  direction?: 'in' | 'out';
+  user_name?: string;
+  created_at?: string;
+  [key: string]: unknown;
+}
+
+export interface BoxCourtesy {
+  table_name?: string;
+  authorized_by?: string;
+  waiter?: string;
+  reason?: string;
+  note?: string;
+  total_sale_price: number;
+  utility_lost?: number;
+  authorized_at?: string;
+  [key: string]: unknown;
+}
+
 /** Balance/operación de una caja agrupada por moneda de salida. */
 export interface BoxSalesDay {
   out_currency_id: number;
   out_currency: string;
-  box_balance?: {
-    initial_amount: number;
-    closed_amount: number;
-    sales_cash_income?: number;
-    sales_card_income?: number;
-    sales_credit_income?: number;
-    expenses_total?: number;
-    movements_total?: number;
-    courtesy_total?: number;
-    change_total?: number;
-    [key: string]: unknown;
+  box_balance?: BoxBalance;
+  /** Pagos agrupados por método (objeto, no `sales`). */
+  new_payments?: BoxPayment[];
+  /** Movimientos manuales (objeto anidado, no array `movements`). */
+  manual_movements?: {
+    total_entries?: number;
+    total_exits?: number;
+    entries_count?: number;
+    exits_count?: number;
+    net_amount?: number;
+    movements_detail?: BoxManualMovement[];
   };
-  sales?: Array<{
-    payment_type_name: string;
-    payment_type_id?: number;
-    invoice_total?: number;
-    amount_received?: number;
-    payment_currency?: string;
-    count?: number;
-    [key: string]: unknown;
-  }>;
-  movements?: Array<{
-    id?: number;
-    movement_type: string;
-    amount: number;
-    note?: string;
-    created_at?: string;
-    [key: string]: unknown;
-  }>;
-  courtesies?: Array<{
-    id?: number;
-    total_sale_price: number;
-    utility_lost?: number;
-    reason?: string;
-    [key: string]: unknown;
-  }>;
-  changes?: Array<{
-    amount_received: number;
-    amount_back: number;
-    change_amount_given?: number;
-    invoice_total?: number;
-    payment_currency?: string;
-    [key: string]: unknown;
-  }>;
+  /** Cortesías (objeto anidado, no array `courtesies`). */
+  courtesies?: {
+    courtesies_count?: number;
+    total_courtesies_sale?: number;
+    total_courtesies_cost?: number;
+    total_utility_lost?: number;
+    courtesies_detail?: BoxCourtesy[];
+  };
+  /** Cambio devuelto en otra moneda (multi-moneda, opcional). */
+  currency_changes?: {
+    changes_count?: number;
+    change_given_currency?: string;
+    total_excess_in_payment_currency?: number;
+    total_change_given?: number;
+    changes_detail?: Array<Record<string, unknown>>;
+  };
+  entries?: Array<{ amount_opened?: number; amount_closed?: number; [key: string]: unknown }>;
   [key: string]: unknown;
+}
+
+/** Desglose físico de billetes/monedas contadas al cierre (cierre avanzado). */
+export interface BoxDenominationRow {
+  value: number;
+  type: 'BILL' | 'COIN';
+  quantity: number;
+  subtotal: number;
+}
+export interface BoxDenominationGroup {
+  currency_id: number;
+  currency_code: string;
+  currency_name: string;
+  total: number;
+  rows: BoxDenominationRow[];
 }

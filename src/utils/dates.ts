@@ -49,3 +49,21 @@ export const rangeSpanDays = (start: string, end: string): number => {
   const b = new Date(end).getTime();
   return Math.max(1, Math.floor((b - a) / 86_400_000) + 1);
 };
+
+/** Presets cortos para reportes admin: Hoy / 7 días / Mes actual (hora local). */
+export type RangePreset = 'today' | '7d' | 'month';
+
+export const presetRange = (key: RangePreset): { start: string; end: string } => {
+  if (key === 'today') {
+    const t = isoDate(new Date());
+    return { start: t, end: t };
+  }
+  if (key === '7d') return resolvePreset(6);
+  return resolvePreset(-1); // mes actual
+};
+
+export const RANGE_LABELS: Record<RangePreset, string> = {
+  today: 'Hoy',
+  '7d': '7 días',
+  month: 'Mes',
+};

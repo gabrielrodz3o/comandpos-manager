@@ -286,27 +286,25 @@ export default function InventoryScreen() {
                 </Card>
               ) : (
                 <Card variant="default" padded={false}>
-                  {filtered.slice(0, 100).map((item, idx) => (
+                  {filtered.map((item, idx) => (
                     <InventoryRow
                       key={`item-${item.item_id}`}
                       item={item}
                       isFirst={idx === 0}
                     />
                   ))}
-                  {filtered.length > 100 ? (
-                    <View
-                      style={{
-                        padding: 12,
-                        alignItems: 'center',
-                        borderTopWidth: 0.5,
-                        borderTopColor: palette.dark.border,
-                      }}
-                    >
-                      <Text style={{ color: palette.dark.textMuted, fontSize: 11 }}>
-                        Mostrando 100 de {fmtInt(filtered.length)}. Refina con búsqueda o filtros.
-                      </Text>
-                    </View>
-                  ) : null}
+                  <View
+                    style={{
+                      padding: 12,
+                      alignItems: 'center',
+                      borderTopWidth: 0.5,
+                      borderTopColor: palette.dark.border,
+                    }}
+                  >
+                    <Text style={{ color: palette.dark.textMuted, fontSize: 11 }}>
+                      {fmtInt(filtered.length)} producto(s)
+                    </Text>
+                  </View>
                 </Card>
               )}
             </>

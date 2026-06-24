@@ -1,4 +1,70 @@
 // ────────────────────────────────────────────────────────────────────
+// Kardex / Movimientos de inventario (ledger consolidado)
+// ────────────────────────────────────────────────────────────────────
+/** Origen del movimiento (mapea a las FK fuente del ledger en el backend). */
+export type KardexSourceType =
+  | 'sale'
+  | 'purchase'
+  | 'adjustment'
+  | 'transfer'
+  | 'waste'
+  | 'conversion'
+  | 'production'
+  | 'other';
+
+export interface KardexRow {
+  id: number;
+  created_at: string;
+  item_id: number;
+  item_name: string;
+  internal_code: string | null;
+  warehouse_id: number;
+  warehouse_name: string;
+  category_name: string | null;
+  entry_type_id: number;
+  entry_type_name: string;
+  /** Firmada: + entrada, − salida (unidad base). */
+  quantity: number;
+  /** Balance corrido por item+almacén tras este movimiento. */
+  balance: number;
+  unit_abbr: string | null;
+  unit_name: string | null;
+  cost_price: number;
+  /** quantity × cost_price ÷ unit_quantity (valor del movimiento). */
+  line_value: number;
+  source_type: KardexSourceType | string;
+  notes: string;
+}
+
+export interface KardexSummary {
+  movimientos: number;
+  total_entradas: number;
+  total_salidas: number;
+  valor_neto: number;
+  items_distintos: number;
+}
+
+export interface KardexResponse {
+  items: KardexRow[];
+  total: number;
+  summary: KardexSummary;
+  pagination: { page: number; limit: number; total: number; total_pages: number };
+}
+
+export interface KardexFilters {
+  business_unit_id?: number | null;
+  location_id?: number | null;
+  warehouse_ids?: number[] | null;
+  item_id?: number | null;
+  source_type?: KardexSourceType | null;
+  start_date: string;
+  end_date: string;
+  search?: string | null;
+  page?: number;
+  limit?: number;
+}
+
+// ────────────────────────────────────────────────────────────────────
 // Inventario — Multi-warehouse
 // ────────────────────────────────────────────────────────────────────
 export type StockStatus =

@@ -77,6 +77,14 @@ export default function OperationsIndex() {
           : undefined,
     },
     {
+      key: 'kardex',
+      href: '/(tabs)/operations/kardex',
+      title: 'Movimientos (Kardex)',
+      description: 'Transacciones de inventario del día',
+      icon: <IconBox color="#0891B2" size={22} />,
+      tint: '#ECFEFF',
+    },
+    {
       key: 'employees',
       href: '/(tabs)/operations/employees',
       title: 'Empleados',
@@ -95,6 +103,14 @@ export default function OperationsIndex() {
       description: 'Clientes con saldo pendiente',
       icon: <IconCard color="#DB2777" size={22} />,
       tint: '#FDF2F8',
+    },
+    {
+      key: 'payables',
+      href: '/(tabs)/operations/payables',
+      title: 'Cuentas por Pagar',
+      description: 'Proveedores y vencimientos',
+      icon: <IconCard color="#DC2626" size={22} />,
+      tint: '#FEF2F2',
     },
     {
       key: 'shifts',

@@ -69,7 +69,6 @@ export default function BoxesIndex() {
             entries.map((b) => {
               const opened = totalAmount(b.amounts, 'amount_opened');
               const closed = totalAmount(b.amounts, 'amount_closed');
-              const diff = closed - opened;
               return (
                 <Pressable
                   key={b.box_entry_id}
@@ -116,21 +115,11 @@ export default function BoxesIndex() {
                       </View>
                       <View style={{ alignItems: 'flex-end' }}>
                         <Text style={{ color: palette.dark.text, fontSize: 14, fontWeight: '700' }}>
-                          {fmtCurrency(b.is_open ? opened : closed)}
+                          {fmtCurrency(b.is_open ? opened : closed, 'DOP', 2)}
                         </Text>
-                        {!b.is_open && diff !== 0 ? (
-                          <Text
-                            style={{
-                              color: diff >= 0 ? palette.dark.success : palette.dark.danger,
-                              fontSize: 11,
-                              fontWeight: '600',
-                              marginTop: 2,
-                            }}
-                          >
-                            {diff > 0 ? '+' : ''}
-                            {fmtCurrency(diff)}
-                          </Text>
-                        ) : null}
+                        <Text style={{ color: palette.dark.textMuted, fontSize: 10, marginTop: 2 }}>
+                          {b.is_open ? 'apertura' : 'cierre · ver detalle'}
+                        </Text>
                       </View>
                     </View>
                   </Card>

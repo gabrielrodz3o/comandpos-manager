@@ -1,9 +1,12 @@
 import { api } from '@services/apiClient';
+import { isoDate } from '@utils/dates';
 import type {
   InventoryItem,
   Warehouse,
   EmployeeBasic,
   EmployeeDetail,
+  KardexResponse,
+  KardexFilters,
 } from '@/types/operations';
 
 // ── INVENTORY (multi-warehouse) ─────────────────────────────────
@@ -43,11 +46,61 @@ export const fetchMultiWarehouseInventory = async (params: {
     '/api/restaurant/inventory/get-multi-warehouse-inventory',
     {
       include_stock_levels: true,
-      date: new Date().toISOString().split('T')[0],
+      // FECHA LOCAL, no UTC. `toISOString()` convierte a UTC y en RD (UTC-4),
+      // de noche, mandaba la fecha de MAÑANA → el backend devolvía un inventario
+      // que excluía las transacciones de hoy ("a veces no aparecen"). isoDate()
+      // ya resuelve esto en hora local (ver src/utils/dates.ts).
+      date: isoDate(new Date()),
       ...params,
     },
   );
   return data;
+};
+
+// ── KARDEX / MOVIMIENTOS DE INVENTARIO ──────────────────────────
+// Ledger consolidado (inventory.item_in_warehouses). Mismo endpoint que la web.
+// El backend filtra con DATE(effective_date) BETWEEN start AND end → el día de
+// hoy queda INCLUIDO. Respuesta envuelta: { success, message, data: {...} }.
+export const fetchKardexGeneral = async (
+  filters: KardexFilters,
+): Promise<KardexResponse> => {
+  const { data } = await api.post<{
+    success?: boolean;
+    message?: string;
+    data?: KardexResponse;
+  }>('/api/restaurant/inventory/kardex-general', {
+    business_unit_id: filters.business_unit_id,
+    // Si se eligen almacenes puntuales, no acotamos por location (la web hace igual).
+    location_id: filters.warehouse_ids?.length ? undefined : filters.location_id,
+    warehouse_ids: filters.warehouse_ids?.length ? filters.warehouse_ids : undefined,
+    item_id: filters.item_id ?? undefined,
+    source_type: filters.source_type ?? undefined,
+    start_date: filters.start_date,
+    end_date: filters.end_date,
+    search: filters.search?.trim() || undefined,
+    page: filters.page ?? 1,
+    limit: filters.limit ?? 50,
+    sortBy: [{ key: 'created_at', order: 'desc' }],
+  });
+
+  const payload = data?.data;
+  return {
+    items: payload?.items ?? [],
+    total: payload?.total ?? 0,
+    summary: payload?.summary ?? {
+      movimientos: 0,
+      total_entradas: 0,
+      total_salidas: 0,
+      valor_neto: 0,
+      items_distintos: 0,
+    },
+    pagination: payload?.pagination ?? {
+      page: filters.page ?? 1,
+      limit: filters.limit ?? 50,
+      total: 0,
+      total_pages: 1,
+    },
+  };
 };
 
 // ── EMPLOYEES (HR endpoint — más completo y estable) ────────────
