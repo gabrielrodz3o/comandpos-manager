@@ -160,6 +160,9 @@ export const useTodaySnapshot = (
         items_per_invoice: 0,
         total_cost: Number(s.costo_ventas ?? 0),
         total_discounts: 0,
+        // NC del período — ventas_total/utilidad ya vienen NETAS de esto (server)
+        credit_notes_total: Number(s.notas_credito_total ?? 0),
+        credit_notes_count: Number(s.notas_credito_count ?? 0),
       }
     : undefined;
 

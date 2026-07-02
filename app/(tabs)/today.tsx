@@ -228,6 +228,12 @@ export default function TodayScreen() {
                 <HeroMini label="TICKET PROM." value={fmtCurrency(summary?.avg_ticket ?? 0)} />
                 <HeroMini label="UTILIDAD" value={fmtCurrency(summary?.total_profit ?? 0)} />
               </View>
+              {/* Venta ya NETA de notas de crédito (server); se informa cuánto restó */}
+              {Number(summary?.credit_notes_total) > 0 ? (
+                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, marginTop: 8 }}>
+                  Incluye {fmtInt(summary?.credit_notes_count ?? 0)} nota(s) de crédito: −{fmtCurrency(summary?.credit_notes_total ?? 0)}
+                </Text>
+              ) : null}
             </LinearGradient>
             </Animated.View>
 

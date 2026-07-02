@@ -5,6 +5,9 @@ export interface FinancialSummary {
   ventas_total: number;
   ventas_subtotal: number;
   ventas_count: number;
+  /** NC del período — ventas_total/subtotal/itbis YA vienen netos (server). */
+  notas_credito_total?: number;
+  notas_credito_count?: number;
   compras_total: number;
   compras_count: number;
   gastos_total: number;
@@ -147,6 +150,9 @@ export interface SalesSummaryCurrentPeriod {
   total_discounts: number;
   total_shipping: number;
   total_invoiced: number;
+  /** NC del período — total_sales/profit YA vienen netos de esto (server). */
+  credit_notes_count?: number;
+  credit_notes_total?: number;
   total_items: number;
   items_per_invoice: number;
   total_gastos: number;
@@ -783,6 +789,29 @@ export interface BoxSalesDay {
     total_courtesies_cost?: number;
     total_utility_lost?: number;
     courtesies_detail?: BoxCourtesy[];
+  };
+  /** Notas de crédito del turno (informativo — no altera el cuadre; el efectivo
+   *  devuelto ya resta como salida manual DEVOLUCION_NOTA_CREDITO). */
+  credit_notes?: {
+    notes_count?: number;
+    total_credited?: number;
+    total_cash_refunded?: number;
+    notes_detail?: Array<{
+      nc_id?: number;
+      nc_number?: string;
+      nc_ncf?: string;
+      nc_total?: number;
+      modification_code?: string;
+      created_at?: string;
+      user_name?: string;
+      affected_invoice_number?: string;
+      affected_invoice_ncf?: string;
+      affected_invoice_total?: number;
+      payments_annulled?: boolean;
+      /** Qué pago(s) devolvió la NC (método y monto). Requiere migración 202607022000 en el server. */
+      annulled_payments?: Array<{ payment_type_name?: string; amount?: number }>;
+      cash_refund?: number;
+    }>;
   };
   /** Cambio devuelto en otra moneda (multi-moneda, opcional). */
   currency_changes?: {

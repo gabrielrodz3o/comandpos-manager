@@ -26,7 +26,7 @@ import type {
   BoxDenominationGroup,
 } from '@/types/reports';
 
-type TabKey = 'resumen' | 'movimientos' | 'facturas' | 'cortesias';
+type TabKey = 'resumen' | 'movimientos' | 'facturas' | 'cortesias' | 'nc';
 
 /** Dinero del cierre: SIEMPRE 2 decimales (fmtCurrency global usa 0 por defecto). */
 const money = (n: unknown, cur = 'DOP'): string => fmtCurrency(n, cur, 2);
@@ -367,6 +367,7 @@ export default function BoxDetailScreen() {
                   { k: 'movimientos', label: 'Movim.' },
                   { k: 'facturas', label: 'Facturas' },
                   { k: 'cortesias', label: 'Cortes.' },
+                  { k: 'nc', label: 'NC' },
                 ] as { k: TabKey; label: string }[]
               ).map(({ k, label }) => (
                 <Pressable
@@ -652,6 +653,94 @@ export default function BoxDetailScreen() {
                   <Card>
                     <Text style={{ color: palette.dark.textMuted, fontSize: 12, textAlign: 'center' }}>
                       Sin cortesías en esta caja.
+                    </Text>
+                  </Card>
+                ) : null}
+              </>
+            ) : null}
+
+            {/* Tab: Notas de crédito (informativo — no altera el cuadre) */}
+            {tab === 'nc' ? (
+              <>
+                {salesDayQ.isLoading ? (
+                  <Skeleton height={200} radius={18} />
+                ) : (
+                  salesData.map((s) => {
+                    const notes = s.credit_notes?.notes_detail ?? [];
+                    if (notes.length === 0) return null;
+                    return (
+                      <SectionCard
+                        key={`nc-${s.out_currency_id}`}
+                        title={`Notas de crédito ${s.out_currency}`}
+                        subtitle={`${s.credit_notes?.notes_count ?? notes.length} · ${money(
+                          s.credit_notes?.total_credited ?? 0,
+                          s.out_currency,
+                        )} acreditado`}
+                        emoji="🧾"
+                      >
+                        <View style={{ gap: 10 }}>
+                          {notes.map((nc, idx) => (
+                            <View
+                              key={`nc-${nc.nc_id ?? idx}`}
+                              style={{
+                                paddingVertical: 6,
+                                borderBottomWidth: idx < notes.length - 1 ? 0.5 : 0,
+                                borderBottomColor: palette.dark.border,
+                              }}
+                            >
+                              <View
+                                style={{
+                                  flexDirection: 'row',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <Text
+                                  style={{ color: palette.dark.text, fontSize: 13, fontWeight: '600', flex: 1 }}
+                                  numberOfLines={1}
+                                >
+                                  {nc.nc_number ?? 'NC'}
+                                  {nc.affected_invoice_number ? ` → ${nc.affected_invoice_number}` : ''}
+                                </Text>
+                                <Text style={{ color: palette.dark.danger, fontSize: 13, fontWeight: '700' }}>
+                                  −{money(nc.nc_total ?? 0, s.out_currency)}
+                                </Text>
+                              </View>
+                              {(nc.annulled_payments ?? []).map((p, pi) => (
+                                <View
+                                  key={`ap-${pi}`}
+                                  style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}
+                                >
+                                  <Text style={{ color: palette.dark.textMuted, fontSize: 11 }}>
+                                    Pago anulado · {p.payment_type_name ?? '—'}
+                                  </Text>
+                                  <Text style={{ color: palette.dark.textMuted, fontSize: 11 }}>
+                                    −{money(p.amount ?? 0, s.out_currency)}
+                                  </Text>
+                                </View>
+                              ))}
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
+                                <Text style={{ color: palette.dark.textMuted, fontSize: 11 }} numberOfLines={1}>
+                                  {[nc.user_name, nc.created_at].filter(Boolean).join(' · ')}
+                                </Text>
+                                {Number(nc.cash_refund) > 0 ? (
+                                  <Text style={{ color: palette.dark.danger, fontSize: 11 }}>
+                                    efectivo devuelto −{money(nc.cash_refund ?? 0, s.out_currency)}
+                                  </Text>
+                                ) : null}
+                              </View>
+                            </View>
+                          ))}
+                        </View>
+                      </SectionCard>
+                    );
+                  })
+                )}
+                {!salesDayQ.isLoading &&
+                salesData.every((s) => !(s.credit_notes?.notes_detail?.length)) ? (
+                  <Card>
+                    <Text style={{ color: palette.dark.textMuted, fontSize: 12, textAlign: 'center' }}>
+                      Sin notas de crédito en este turno.
                     </Text>
                   </Card>
                 ) : null}

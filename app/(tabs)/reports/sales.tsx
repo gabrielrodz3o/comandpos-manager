@@ -93,6 +93,10 @@ export default function SalesReportScreen() {
                     title: 'Resumen ejecutivo',
                     rows: [
                       { label: 'Ventas netas', value: fmtCurrency(summary.total_sales) },
+                      // Ventas ya netas de NC (server); la línea es informativa
+                      ...(Number(summary.credit_notes_total) > 0
+                        ? [{ label: `Notas de crédito (${fmtInt(summary.credit_notes_count)})`, value: `-${fmtCurrency(summary.credit_notes_total)}`, negative: true }]
+                        : []),
                       { label: 'Facturas', value: fmtInt(summary.num_facturas) },
                       { label: 'Ticket promedio', value: fmtCurrency(summary.avg_ticket) },
                       { label: 'Costo de ventas', value: fmtCurrency(summary.total_cost) },
@@ -143,14 +147,18 @@ export default function SalesReportScreen() {
             />
           ) : (
             <>
-              {/* Hero — ventas totales */}
+              {/* Hero — ventas totales (ya NETAS de notas de crédito, server) */}
               {summary ? (
                 <KpiCard
                   variant="hero"
                   label="Ventas Netas"
                   value={fmtCurrency(summary.total_sales)}
                   delta={summary.compras_vs_ventas_pct}
-                  hint={`${fmtInt(summary.num_facturas)} facturas · ${fmtInt(summary.days_with_sales)} días`}
+                  hint={`${fmtInt(summary.num_facturas)} facturas · ${fmtInt(summary.days_with_sales)} días${
+                    Number(summary.credit_notes_total) > 0
+                      ? ` · NC −${fmtCurrency(summary.credit_notes_total)} (${fmtInt(summary.credit_notes_count)})`
+                      : ''
+                  }`}
                 />
               ) : null}
 
