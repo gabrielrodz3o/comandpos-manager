@@ -17,36 +17,62 @@ export interface Insight {
  * 100% client-side, sin LLM. Cuando exista endpoint /api/ai/chat, esto se
  * complementa con insights más sofisticados generados por IA.
  */
-export const generateInsights = (data: FinancialOverviewResponse | null): Insight[] => {
+export const generateInsights = (
+  data: FinancialOverviewResponse | null,
+  opts?: { isSingleDay?: boolean },
+): Insight[] => {
   if (!data?.summary) return [];
   const s = data.summary;
   const out: Insight[] = [];
 
-  // Margen neto negativo
-  if (s.utilidad_neta < 0) {
-    out.push({
-      id: 'negative-margin',
-      severity: 'critical',
-      emoji: '🔴',
-      title: 'Utilidad neta negativa',
-      description: `El período cerró con pérdida de ${fmtCurrency(Math.abs(s.utilidad_neta))}. Revisa costos operativos y gastos.`,
-    });
-  } else if (s.margen_neto_pct > 25) {
-    out.push({
-      id: 'high-margin',
-      severity: 'positive',
-      emoji: '🎉',
-      title: 'Margen neto excelente',
-      description: `${fmtPct(s.margen_neto_pct)} de margen neto está muy por encima del promedio del sector (~10-15%).`,
-    });
-  } else if (s.margen_neto_pct < 5 && s.margen_neto_pct >= 0) {
-    out.push({
-      id: 'low-margin',
-      severity: 'warning',
-      emoji: '⚠️',
-      title: 'Margen neto bajo',
-      description: `Solo ${fmtPct(s.margen_neto_pct)} de margen. Sector recomienda 10-15%. Revisa precios o costos.`,
-    });
+  if (opts?.isSingleDay) {
+    // Vista de 1 día: los gastos operativos (alquiler, nómina) son mensuales, así
+    // que una "pérdida neta" diaria es engañosa. Solo alertamos si el día vendió
+    // POR DEBAJO del costo (pérdida bruta real).
+    if (s.utilidad_bruta < 0) {
+      out.push({
+        id: 'negative-margin',
+        severity: 'critical',
+        emoji: '🔴',
+        title: 'Margen bruto negativo',
+        description: `Hoy se vendió por debajo del costo (pérdida bruta de ${fmtCurrency(Math.abs(s.utilidad_bruta))}). Revisa precios o costos de recetas.`,
+      });
+    } else if (s.margen_bruto_pct > 0 && s.margen_bruto_pct < 15) {
+      out.push({
+        id: 'low-gross-margin',
+        severity: 'warning',
+        emoji: '⚠️',
+        title: 'Margen bruto bajo hoy',
+        description: `Solo ${fmtPct(s.margen_bruto_pct)} de margen bruto. En restaurante suele ser 60-70%. Revisa costos de recetas o descuentos.`,
+      });
+    }
+  } else {
+    // Vista de período: análisis de margen NETO completo (incluye gastos).
+    if (s.utilidad_neta < 0) {
+      out.push({
+        id: 'negative-margin',
+        severity: 'critical',
+        emoji: '🔴',
+        title: 'Utilidad neta negativa',
+        description: `El período cerró con pérdida de ${fmtCurrency(Math.abs(s.utilidad_neta))}. Revisa costos operativos y gastos.`,
+      });
+    } else if (s.margen_neto_pct > 25) {
+      out.push({
+        id: 'high-margin',
+        severity: 'positive',
+        emoji: '🎉',
+        title: 'Margen neto excelente',
+        description: `${fmtPct(s.margen_neto_pct)} de margen neto está muy por encima del promedio del sector (~10-15%).`,
+      });
+    } else if (s.margen_neto_pct < 5 && s.margen_neto_pct >= 0) {
+      out.push({
+        id: 'low-margin',
+        severity: 'warning',
+        emoji: '⚠️',
+        title: 'Margen neto bajo',
+        description: `Solo ${fmtPct(s.margen_neto_pct)} de margen. Sector recomienda 10-15%. Revisa precios o costos.`,
+      });
+    }
   }
 
   // Gastos altos vs ventas

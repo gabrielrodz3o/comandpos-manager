@@ -73,6 +73,17 @@ export default function DashboardScreen() {
   const pctChange = (curr: number, base?: number): number | undefined =>
     base && base > 0 ? ((curr - base) / base) * 100 : undefined;
 
+  // Hero de dos niveles (criterio de devengo): en 1 día mostramos Utilidad BRUTA
+  // (Ventas − COGS) porque los gastos operativos (alquiler, nómina) son mensuales
+  // y distorsionan un día suelto (un alquiler de 90k caído hoy haría ver "pérdida"
+  // siendo del mes). En varios días / mes mostramos Utilidad NETA (− gastos).
+  const heroIsGross = rangeSpanDays(startDate, endDate) <= 1;
+  const heroLabel = heroIsGross ? 'Utilidad Bruta (hoy)' : 'Utilidad Neta';
+  const heroValue = (heroIsGross ? summary?.utilidad_bruta : summary?.utilidad_neta) ?? 0;
+  const heroPrev = heroIsGross ? prev?.utilidad_bruta : prev?.utilidad_neta;
+  const heroMarginPct = (heroIsGross ? summary?.margen_bruto_pct : summary?.margen_neto_pct) ?? 0;
+  const heroMarginLabel = heroIsGross ? 'Margen bruto' : 'Margen neto';
+
   const goalPeriod = periodKey(startDate);
   const periodGoal = useGoalsStore((s) => s.goals[goalPeriod]);
 
@@ -177,16 +188,16 @@ export default function DashboardScreen() {
           </View>
         ) : (
           <View style={{ paddingHorizontal: 20, gap: 14 }}>
-            {/* Hero — Utilidad Neta */}
+            {/* Hero — Utilidad (1 día = Bruta, período = Neta) */}
             <KpiCard
               variant="hero"
-              label="Utilidad Neta"
-              value={fmtCurrency(summary.utilidad_neta)}
-              delta={pctChange(summary.utilidad_neta, prev?.utilidad_neta)}
+              label={heroLabel}
+              value={fmtCurrency(heroValue)}
+              delta={pctChange(heroValue, heroPrev)}
               hint={
                 prev
-                  ? `Margen ${fmtPct(summary.margen_neto_pct)} · vs período ant.`
-                  : `Margen neto · ${fmtPct(summary.margen_neto_pct)}`
+                  ? `${heroMarginLabel} ${fmtPct(heroMarginPct)} · vs período ant.`
+                  : `${heroMarginLabel} · ${fmtPct(heroMarginPct)}`
               }
             />
 
@@ -354,7 +365,7 @@ export default function DashboardScreen() {
 
             {/* Insights generados automáticamente */}
             {(() => {
-              const insights = generateInsights(data ?? null);
+              const insights = generateInsights(data ?? null, { isSingleDay: heroIsGross });
               return insights.length > 0 ? (
                 <SectionCard
                   title="Insights automáticos"

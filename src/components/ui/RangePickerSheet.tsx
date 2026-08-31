@@ -324,10 +324,21 @@ export const RangePickerSheet: React.FC<Props> = ({ visible, initial, onClose, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
-  const days = useMemo(() => {
+  /**
+   * Filas explícitas de 7 días.
+   *
+   * BUG arreglado: la grilla usaba `flexWrap` con `width: '14.285714%'`. El
+   * redondeo de píxeles de RN hace que 7 celdas sumen algo > 100% del ancho,
+   * así que solo entraban 6 por fila: cada día caía bajo el día de semana
+   * equivocado y los domingos desaparecían de su columna.
+   */
+  const weeks = useMemo(() => {
     const gridStart = startOfWeek(startOfMonth(viewMonth), { weekStartsOn: 1 });
     const gridEnd = endOfWeek(endOfMonth(viewMonth), { weekStartsOn: 1 });
-    return eachDayOfInterval({ start: gridStart, end: gridEnd });
+    const all = eachDayOfInterval({ start: gridStart, end: gridEnd });
+    const rows: Date[][] = [];
+    for (let i = 0; i < all.length; i += 7) rows.push(all.slice(i, i + 7));
+    return rows;
   }, [viewMonth]);
 
   const startD = selStart ? parseISO(selStart) : null;
@@ -437,53 +448,57 @@ export const RangePickerSheet: React.FC<Props> = ({ visible, initial, onClose, o
             </View>
 
             {/* Grilla */}
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-              {days.map((d) => {
-                const inMonth = isSameMonth(d, viewMonth);
-                const isStart = startD && isSameDay(d, startD);
-                const isEnd = endD && isSameDay(d, endD);
-                const inRange =
-                  startD && endD && isWithinInterval(d, { start: startD, end: endD });
-                const edge = isStart || isEnd;
-                const future = isAfter(d, new Date());
-                return (
-                  <View key={d.toISOString()} style={{ width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 2 }}>
-                    <Pressable
-                      onPress={() => !future && handleDay(d)}
-                      disabled={future}
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 12,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: edge
-                          ? palette.dark.text
-                          : inRange
-                            ? palette.dark.primaryDim
-                            : 'transparent',
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: edge
-                            ? '#FFF'
-                            : !inMonth || future
-                              ? palette.dark.textMuted
+            <View>
+              {weeks.map((week, wi) => (
+                <View key={`wk-${wi}`} style={{ flexDirection: 'row' }}>
+                  {week.map((d) => {
+                    const inMonth = isSameMonth(d, viewMonth);
+                    const isStart = startD && isSameDay(d, startD);
+                    const isEnd = endD && isSameDay(d, endD);
+                    const inRange =
+                      startD && endD && isWithinInterval(d, { start: startD, end: endD });
+                    const edge = isStart || isEnd;
+                    const future = isAfter(d, new Date());
+                    return (
+                      <View key={d.toISOString()} style={{ flex: 1, alignItems: 'center', paddingVertical: 2 }}>
+                        <Pressable
+                          onPress={() => !future && handleDay(d)}
+                          disabled={future}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 12,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: edge
+                              ? palette.dark.text
                               : inRange
-                                ? palette.dark.primary
-                                : palette.dark.text,
-                          fontSize: 14,
-                          fontWeight: edge ? '800' : '600',
-                          opacity: future ? 0.35 : 1,
-                        }}
-                      >
-                        {format(d, 'd')}
-                      </Text>
-                    </Pressable>
-                  </View>
-                );
-              })}
+                                ? palette.dark.primaryDim
+                                : 'transparent',
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: edge
+                                ? '#FFF'
+                                : !inMonth || future
+                                  ? palette.dark.textMuted
+                                  : inRange
+                                    ? palette.dark.primary
+                                    : palette.dark.text,
+                              fontSize: 14,
+                              fontWeight: edge ? '800' : '600',
+                              opacity: future ? 0.35 : 1,
+                            }}
+                          >
+                            {format(d, 'd')}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    );
+                  })}
+                </View>
+              ))}
             </View>
 
             {/* Toggle de hora */}
